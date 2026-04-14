@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ラッコポッケ 価格調査</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Sans', 'Meiryo', 'Segoe UI', sans-serif;
+      background: #0a0e1a;
+      color: #d1d9e6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 16px 64px;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      color: #e0e6f0;
+      font-weight: bold;
+      margin-bottom: 8px;
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      font-size: 0.78rem;
+      color: #4a5568;
+      margin-bottom: 36px;
+    }
+
+    /* ── タブ ── */
+    .tab-bar {
+      display: flex;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 20px;
+      background: #111827;
+      border: 1px solid #1e2a3a;
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      border-radius: 8px;
+      color: #4a5568;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      letter-spacing: 0.03em;
+      text-align: center;
+    }
+    .tab-btn.active { background: #1d4ed8; color: #fff; }
+
+    .tab-panel { display: none; width: 100%; }
+    .tab-panel.active { display: flex; flex-direction: column; align-items: center; }
+
+    /* ── 検索フォーム ── */
+    .card {
+      background: #111827;
+      border: 1px solid #1e2a3a;
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .form-title {
+      font-size: 0.78rem;
+      color: #4a90d9;
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.72rem;
+      color: #8899aa;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .field input[type="text"] {
+      width: 100%;
+      background: #0d1420;
+      border: 1px solid #2a3a50;
+      border-radius: 8px;
+      color: #e0e6f0;
+      font-size: 1rem;
+      padding: 12px 14px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .field input[type="text"]:focus { border-color: #2563eb; }
+    .field input[type="text"]::placeholder { color: #3a4a60; }
+
+    /* ── App ID 設定 ── */
+    .appid-setup {
+      background: #0d1a10;
+      border: 1px solid #1a4a20;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .appid-setup-title {
+      font-size: 0.72rem;
+      color: #4ade80;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+    }
+    .appid-row {
+      display: flex;
+      gap: 8px;
+    }
+    .appid-row input {
+      flex: 1;
+      background: #0d1420;
+      border: 1px solid #2a3a50;
+      border-radius: 8px;
+      color: #e0e6f0;
+      font-size: 0.8rem;
+      padding: 10px 12px;
+      outline: none;
+      font-family: monospace;
+      transition: border-color 0.2s;
+    }
+    .appid-row input:focus { border-color: #2563eb; }
+    .appid-row input::placeholder { color: #3a4a60; }
+    .btn-appid-save {
+      background: #065f46;
+      color: #4ade80;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: bold;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .btn-appid-save:hover { background: #047857; }
+    .appid-hint {
+      font-size: 0.68rem;
+      color: #4a5568;
+      line-height: 1.6;
+    }
+    .appid-hint a { color: #2563eb; }
+
+    .appid-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .appid-ok-label {
+      font-size: 0.72rem;
+      color: #4ade80;
+    }
+    .btn-appid-change {
+      font-size: 0.68rem;
+      color: #4a5568;
+      background: none;
+      border: 1px solid #2a3a50;
+      border-radius: 4px;
+      padding: 3px 8px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-appid-change:hover { color: #8899aa; }
+
+    /* ── 検索ボタン ── */
+    .btn-search {
+      width: 100%;
+      padding: 15px;
+      background: #1d4ed8;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s;
+      margin-top: 4px;
+      font-family: inherit;
+    }
+    .btn-search:hover { background: #1e40af; }
+    .btn-search:active { background: #1e3a9f; }
+    .btn-search:disabled { background: #1a2535; color: #4a5568; cursor: default; }
+
+    /* ── 結果カード ── */
+    .result-card {
+      border: 1px solid #1e2a3a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      gap: 12px;
+    }
+    .result-row + .result-row { border-top: 1px solid #1e2a3a; }
+    .result-label {
+      font-size: 0.78rem;
+      color: #8899aa;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    .result-value {
+      font-size: 1.15rem;
+      font-weight: bold;
+      text-align: right;
+    }
+    .result-value.cheapest { color: #4ade80; }
+    .result-value.none     { color: #4a5568; font-size: 0.85rem; font-weight: normal; }
+    .result-value.loading  { color: #4a5568; font-size: 0.85rem; font-weight: normal; }
+
+    .result-links {
+      padding: 10px 16px;
+      border-top: 1px solid #1e2a3a;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .result-link {
+      font-size: 0.72rem;
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .result-link:hover { text-decoration: underline; }
+
+    /* ── 履歴 ── */
+    .records-section {
+      width: 100%;
+      max-width: 480px;
+    }
+    .records-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .records-header h2 {
+      font-size: 0.78rem;
+      color: #4a90d9;
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex: 1;
+    }
+    .btn-select-records, .btn-delete-selected {
+      font-size: 0.72rem;
+      color: #8899aa;
+      background: none;
+      border: 1px solid #2a3a50;
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .btn-select-records.active { color: #fbbf24; border-color: #92400e; background: #1c1408; }
+    .btn-delete-selected:hover { color: #e53e3e; border-color: #e53e3e; }
+
+    .btn-done-reorder {
+      display: none;
+      font-size: 0.72rem;
+      color: #4ade80;
+      background: none;
+      border: 1px solid #4ade80;
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .records-empty {
+      text-align: center;
+      color: #3a4a60;
+      font-size: 0.88rem;
+      padding: 24px 0;
+    }
+
+    .records-item {
+      background: #111827;
+      border: 1px solid #1e2a3a;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.18s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .records-item:hover { border-color: #2563eb; background: #0f1e3a; }
+    .records-item.selected { border-color: #2563eb; background: #0f1e3a; }
+    .records-item.dragging { opacity: 0.15; }
+
+    .records-check { display: none; flex-shrink: 0; }
+    .select-mode .records-check { display: block; }
+    .records-check input[type="checkbox"] {
+      width: 18px; height: 18px;
+      accent-color: #2563eb;
+      cursor: pointer;
+    }
+    .select-mode .records-arrow { display: none; }
+
+    .records-item-body { flex: 1; min-width: 0; }
+    .records-keyword {
+      font-size: 0.95rem;
+      color: #dde6f0;
+      font-weight: bold;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .records-prices {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+    .records-price-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .records-price-label { font-size: 0.65rem; color: #4a5568; white-space: nowrap; }
+    .records-price-val { font-size: 0.8rem; font-weight: bold; }
+    .records-price-val.cheapest { color: #4ade80; }
+    .records-price-val.none     { color: #4a5568; font-weight: normal; }
+    .records-datetime { font-size: 0.7rem; color: #4a5568; }
+    .records-arrow { font-size: 0.85rem; color: #2a3a50; flex-shrink: 0; }
+
+    /* ── ドラッグ並び替え ── */
+    .drag-handle {
+      display: none;
+      font-size: 1.2rem;
+      color: #4a5568;
+      padding: 4px 8px;
+      cursor: grab;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+    .reorder-mode .drag-handle { display: block; }
+    .reorder-mode .records-arrow { display: none !important; }
+    .drag-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 500;
+      background: #111827;
+      border: 1px solid #2563eb;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      opacity: 0.92;
+      transition: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>ラッコポッケ Yahoo!店</h1>
+  <p class="subtitle">最安出品価格を取得します</p>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-btn-history" onclick="switchTab('history')">検索履歴</button>
+    <button class="tab-btn" id="tab-btn-search" onclick="switchTab('search')">新規検索</button>
+  </div>
+
+  <!-- 新規検索パネル -->
+  <div id="panel-search" class="tab-panel">
+    <div class="card">
+      <div class="form-header">
+        <span class="form-title">新規検索</span>
+      </div>
+
+      <!-- App ID 未設定時 -->
+      <div class="appid-setup" id="appid-setup">
+        <div class="appid-setup-title">Yahoo! App ID を設定してください</div>
+        <div class="appid-row">
+          <input type="text" id="inp-appid" placeholder="dj00aiZp..." autocomplete="off" spellcheck="false">
+          <button class="btn-appid-save" onclick="saveAppId()">保存</button>
+        </div>
+        <div class="appid-hint">
+          <a href="https://developer.yahoo.co.jp/start/" target="_blank">Yahoo!デベロッパーネットワーク</a> でアプリを登録し、Client ID（App ID）を貼り付けてください。無料で取得できます。
+        </div>
+      </div>
+
+      <!-- App ID 設定済み時 -->
+      <div class="appid-status" id="appid-status" style="display:none">
+        <span class="appid-ok-label">App ID: 設定済み</span>
+        <button class="btn-appid-change" onclick="resetAppId()">変更</button>
+      </div>
+
+      <div class="field">
+        <label>商品名</label>
+        <input type="text" id="inp-keyword" placeholder="例：ポケモンカード 151 box" autocomplete="off">
+      </div>
+
+      <button class="btn-search" id="btn-fetch" onclick="doSearch()">価格を取得する</button>
+
+      <div class="result-card" id="result-card" style="display:none">
+        <div class="result-row">
+          <span class="result-label">最安出品価格</span>
+          <span class="result-value cheapest" id="res-cheapest">-</span>
+        </div>
+        <div class="result-links">
+          <a class="result-link" id="link-cheapest" href="#" target="_blank">→ 出品一覧を見る</a>
+          <a class="result-link" id="link-amazon" href="#" target="_blank">→ Amazonで検索</a>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panel-search -->
+
+  <!-- 履歴パネル -->
+  <div id="panel-history" class="tab-panel active">
+    <div class="records-section">
+      <div class="records-header">
+        <h2>検索履歴</h2>
+        <button class="btn-select-records" id="btn-select" onclick="toggleSelectMode()">選択</button>
+        <button class="btn-done-reorder" id="btn-done-reorder" onclick="exitReorderMode()">完了</button>
+        <button class="btn-delete-selected" id="btn-delete-selected" onclick="deleteSelected()" style="display:none">削除</button>
+      </div>
+      <div id="records-list"></div>
+    </div>
+  </div><!-- /panel-history -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  // ── Firebase 初期化 ──
+  firebase.initializeApp({
+    apiKey: "AIzaSyCfvqQWLB8NJqmaH0k2G0wPcbJJjz2Vu4A",
+    authDomain: "kaimemo-58bad.firebaseapp.com",
+    projectId: "kaimemo-58bad",
+    storageBucket: "kaimemo-58bad.firebasestorage.app",
+    messagingSenderId: "308069117698",
+    appId: "1:308069117698:web:c61a57853abb7e8ffb1c1b"
+  });
+  const db = firebase.firestore();
+  const docRef = db.collection('data').doc('raccoo-price');
+
+  // ── 設定 ──
+  const SHOPPING_STORE_ID = 'shijimi-ya';  // ラッコポッケ Yahoo!店
+
+  const MAX_HISTORY = 100;
+  let records = [];
+  let selectMode = false;
+  let selectedIdxs = new Set();
+  let reorderMode = false;
+  let dragState = null;
+  let longPressTimer = null;
+  let longPressStart = { x: 0, y: 0 };
+  let activeTab = 'history';
+
+  // ── App ID 管理 ──
+  let appId = localStorage.getItem('yahoo_app_id') || '';
+
+  function initAppIdUI() {
+    if (appId) {
+      document.getElementById('appid-setup').style.display = 'none';
+      document.getElementById('appid-status').style.display = 'flex';
+    } else {
+      document.getElementById('appid-setup').style.display = '';
+      document.getElementById('appid-status').style.display = 'none';
+    }
+  }
+
+  function saveAppId() {
+    const val = document.getElementById('inp-appid').value.trim();
+    if (!val) { document.getElementById('inp-appid').focus(); return; }
+    appId = val;
+    localStorage.setItem('yahoo_app_id', appId);
+    initAppIdUI();
+  }
+
+  function resetAppId() {
+    appId = '';
+    localStorage.removeItem('yahoo_app_id');
+    document.getElementById('inp-appid').value = '';
+    initAppIdUI();
+  }
+
+  initAppIdUI();
+
+  // ── タブ切り替え ──
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tab-btn-search').classList.toggle('active', tab === 'search');
+    document.getElementById('tab-btn-history').classList.toggle('active', tab === 'history');
+    document.getElementById('panel-search').classList.toggle('active', tab === 'search');
+    document.getElementById('panel-history').classList.toggle('active', tab === 'history');
+  }
+
+  // ── Yahoo! Shopping API ──
+  async function fetchCheapestPrice(keyword) {
+    if (!appId) throw new Error('App ID未設定');
+    const params = new URLSearchParams({
+      appid: appId,
+      query: keyword,
+      results: '50',
+    });
+    const resp = await fetch(
+      `https://yahoo-proxy.nakamuras98789.workers.dev/?${params}`,
+      { signal: AbortSignal.timeout(12000) }
+    );
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '');
+      throw new Error(`API ${resp.status}: ${text.slice(0, 80)}`);
+    }
+    const data = await resp.json();
+    const hits = (data.hits || []).filter(h => h.seller?.sellerId === SHOPPING_STORE_ID);
+    if (!hits.length) return null;
+    return Math.min(...hits.map(h => h.price));
+  }
+
+  // ── メイン検索処理 ──
+  async function doSearch() {
+    if (!appId) {
+      document.getElementById('inp-appid').focus();
+      return;
+    }
+    const keyword = document.getElementById('inp-keyword').value.trim();
+    if (!keyword) { document.getElementById('inp-keyword').focus(); return; }
+
+    const btn = document.getElementById('btn-fetch');
+    btn.disabled = true;
+    btn.textContent = '取得中...';
+
+    const resultCard = document.getElementById('result-card');
+    resultCard.style.display = '';
+
+    const elCheapest = document.getElementById('res-cheapest');
+    elCheapest.textContent = '取得中...'; elCheapest.className = 'result-value loading';
+
+    document.getElementById('link-cheapest').href = `https://store.shopping.yahoo.co.jp/${SHOPPING_STORE_ID}/search.html?p=${encodeURIComponent(keyword)}&X=12`;
+    document.getElementById('link-amazon').href = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}`;
+
+    let cheapest = null;
+    let cheapestErr = null;
+    try {
+      cheapest = await fetchCheapestPrice(keyword);
+    } catch(e) {
+      cheapestErr = e.message;
+    }
+
+    if (cheapest !== null) {
+      elCheapest.textContent = '¥' + cheapest.toLocaleString('ja-JP');
+      elCheapest.className = 'result-value cheapest';
+    } else {
+      elCheapest.textContent = cheapestErr || '出品なし';
+      elCheapest.className = 'result-value none';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '価格を取得する';
+
+    if (cheapest !== null) {
+      addHistory(keyword, cheapest);
+    }
+  }
+
+  // ── 履歴 ──
+  function formatDatetime(d) {
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
+  function save() {
+    docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
+  }
+
+  function addHistory(keyword, cheapest) {
+    const entry = { keyword, cheapest: cheapest ?? null, datetime: formatDatetime(new Date()) };
+    const filtered = records.filter(h => h.keyword !== keyword);
+    filtered.unshift(entry);
+    records = filtered.slice(0, MAX_HISTORY);
+    save();
+    renderHistory();
+  }
+
+  // ── 選択モード ──
+  function toggleSelectMode() {
+    selectMode = !selectMode;
+    selectedIdxs.clear();
+    const btn = document.getElementById('btn-select');
+    btn.textContent = selectMode ? 'キャンセル' : '選択';
+    btn.classList.toggle('active', selectMode);
+    document.getElementById('btn-delete-selected').style.display = 'none';
+    renderHistory();
+  }
+
+  function toggleSelectItem(fullIdx) {
+    if (selectedIdxs.has(fullIdx)) selectedIdxs.delete(fullIdx);
+    else selectedIdxs.add(fullIdx);
+    renderHistory();
+  }
+
+  function deleteSelected() {
+    if (!selectedIdxs.size) return;
+    if (!confirm(`${selectedIdxs.size}件の履歴を削除しますか？`)) return;
+    records = records.filter((_, i) => !selectedIdxs.has(i));
+    save();
+    selectedIdxs.clear();
+    selectMode = false;
+    document.getElementById('btn-select').textContent = '選択';
+    document.getElementById('btn-select').classList.remove('active');
+    document.getElementById('btn-delete-selected').style.display = 'none';
+    renderHistory();
+  }
+
+  // ── 描画 ──
+  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtPrice(val) { return val !== null ? '¥' + Number(val).toLocaleString('ja-JP') : null; }
+
+  function renderHistory() {
+    const list = document.getElementById('records-list');
+    list.classList.toggle('select-mode', selectMode);
+    list.classList.toggle('reorder-mode', reorderMode);
+
+    const delBtn = document.getElementById('btn-delete-selected');
+    const showDel = selectMode && selectedIdxs.size > 0;
+    delBtn.style.display = showDel ? 'inline-block' : 'none';
+    if (showDel) delBtn.textContent = `削除（${selectedIdxs.size}件）`;
+
+    if (!records.length) {
+      list.innerHTML = '<div class="records-empty">履歴がありません</div>';
+      return;
+    }
+
+    const makeBody = (h) => {
+      const cp = fmtPrice(h.cheapest);
+      return `
+        <div class="records-item-body">
+          <div class="records-keyword">${esc(h.keyword)}</div>
+          <div class="records-prices">
+            <div class="records-price-item">
+              <span class="records-price-label">最安</span>
+              <span class="records-price-val${cp ? ' cheapest' : ' none'}">${cp ?? '-'}</span>
+            </div>
+          </div>
+          <div class="records-datetime">${h.datetime}</div>
+        </div>`;
+    };
+
+    if (reorderMode) {
+      list.innerHTML = records.map((h, fi) => `
+        <div class="records-item" data-filter-idx="${fi}" onclick="onItemClick(${fi})">
+          ${makeBody(h)}
+          <div style="display:flex;align-items:center;flex-shrink:0">
+            <span class="drag-handle" data-filter-idx="${fi}">☰</span>
+          </div>
+        </div>`).join('');
+      list.querySelectorAll('.drag-handle').forEach(handle => {
+        handle.addEventListener('touchstart', e => {
+          e.preventDefault();
+          startDrag(e, Number(handle.dataset.filterIdx));
+        }, { passive: false });
+      });
+      return;
+    }
+
+    list.innerHTML = records.map((h, i) => `
+      <div class="records-item${selectedIdxs.has(i) ? ' selected' : ''}" onclick="onItemClick(${i})">
+        <div class="records-check"><input type="checkbox" ${selectedIdxs.has(i) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectItem(${i})"></div>
+        ${makeBody(h)}
+        <div style="display:flex;align-items:center;flex-shrink:0;gap:6px">
+          <span class="records-arrow">›</span>
+        </div>
+      </div>`).join('');
+  }
+
+  function onItemClick(idx) {
+    if (reorderMode) return;
+    if (selectMode) { toggleSelectItem(idx); return; }
+    loadFromHistory(idx);
+  }
+
+  function loadFromHistory(idx) {
+    const h = records[idx];
+    if (!h) return;
+    window.open(`https://store.shopping.yahoo.co.jp/${SHOPPING_STORE_ID}/search.html?p=${encodeURIComponent(h.keyword)}&X=12`, '_blank');
+  }
+
+  // ── 並び替えモード ──
+  function enterReorderMode() {
+    if (selectMode) toggleSelectMode();
+    reorderMode = true;
+    document.getElementById('btn-select').style.display = 'none';
+    document.getElementById('btn-done-reorder').style.display = '';
+    renderHistory();
+    if (navigator.vibrate) navigator.vibrate(40);
+  }
+
+  function exitReorderMode() {
+    reorderMode = false;
+    document.getElementById('btn-select').style.display = '';
+    document.getElementById('btn-done-reorder').style.display = 'none';
+    renderHistory();
+  }
+
+  function startDrag(e, filterIdx) {
+    const cardEl = document.querySelector(`.records-item[data-filter-idx="${filterIdx}"]`);
+    if (!cardEl) return;
+    const rect  = cardEl.getBoundingClientRect();
+    const touch = e.touches[0];
+    const ghost = cardEl.cloneNode(true);
+    ghost.className = 'records-item drag-ghost';
+    ghost.style.left  = `${rect.left}px`;
+    ghost.style.top   = `${rect.top}px`;
+    ghost.style.width = `${rect.width}px`;
+    document.body.appendChild(ghost);
+    cardEl.classList.add('dragging');
+    dragState = { filterIdx, cardEl, ghost, offsetY: touch.clientY - rect.top, startY: touch.clientY, moved: false, targetIdx: null };
+  }
+
+  function moveDrag(e) {
+    if (!dragState) return;
+    const touch = e.touches[0];
+    if (Math.abs(touch.clientY - dragState.startY) > 8) dragState.moved = true;
+    dragState.ghost.style.top = `${Math.max(60, touch.clientY - dragState.offsetY)}px`;
+    if (!dragState.moved) return;
+    const allCards = [...document.querySelectorAll('.records-item:not(.drag-ghost)')];
+    const srcIdx = dragState.filterIdx;
+    let targetIdx = allCards.length;
+    for (let i = 0; i < allCards.length; i++) {
+      if (i === srcIdx) continue;
+      const rb = allCards[i].getBoundingClientRect();
+      const matrix = new DOMMatrix(getComputedStyle(allCards[i]).transform);
+      if (touch.clientY < rb.top - matrix.m42 + rb.height / 2) { targetIdx = i; break; }
+    }
+    dragState.targetIdx = targetIdx;
+    const shiftPx = (allCards[srcIdx]?.getBoundingClientRect().height ?? 0) + 8;
+    allCards.forEach((c, i) => {
+      if (i === srcIdx) return;
+      c.style.transform = targetIdx <= srcIdx
+        ? ((i >= targetIdx && i < srcIdx) ? `translateY(${shiftPx}px)` : '')
+        : ((i > srcIdx && i <= targetIdx - 1) ? `translateY(-${shiftPx}px)` : '');
+    });
+  }
+
+  function endDrag() {
+    if (!dragState) return;
+    const { ghost, cardEl, filterIdx, targetIdx, moved } = dragState;
+    ghost.remove();
+    cardEl.classList.remove('dragging');
+    document.querySelectorAll('.records-item:not(.drag-ghost)').forEach(c => c.style.transform = '');
+    dragState = null;
+    if (!moved) { exitReorderMode(); return; }
+    if (targetIdx === null || targetIdx === filterIdx) { renderHistory(); return; }
+    const newRecords = [...records];
+    const [item] = newRecords.splice(filterIdx, 1);
+    newRecords.splice(targetIdx > filterIdx ? targetIdx - 1 : targetIdx, 0, item);
+    records = newRecords;
+    save();
+    renderHistory();
+  }
+
+  // ── イベント ──
+  const listEl = document.getElementById('records-list');
+  listEl.addEventListener('touchstart', e => {
+    if (reorderMode || selectMode) return;
+    const card = e.target.closest('.records-item');
+    if (!card || e.target.closest('button') || e.target.closest('input')) return;
+    longPressStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    longPressTimer = setTimeout(() => { longPressTimer = null; enterReorderMode(); }, 600);
+  }, { passive: true });
+  listEl.addEventListener('touchmove', e => {
+    if (!longPressTimer) return;
+    if (Math.abs(e.touches[0].clientX - longPressStart.x) > 10 || Math.abs(e.touches[0].clientY - longPressStart.y) > 10) {
+      clearTimeout(longPressTimer); longPressTimer = null;
+    }
+  }, { passive: true });
+  listEl.addEventListener('touchend', () => { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } }, { passive: true });
+  document.addEventListener('touchmove', e => { if (dragState) { e.preventDefault(); moveDrag(e); } }, { passive: false });
+  document.addEventListener('touchend', () => { if (dragState) endDrag(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && activeTab === 'search') doSearch(); });
+
+  // ── Firebase 読み込み ──
+  docRef.onSnapshot(snap => {
+    if (dragState) return;
+    records = snap.exists ? (snap.data().list || []) : [];
+    renderHistory();
+  });
+</script>
+
+</body>
+</html>
