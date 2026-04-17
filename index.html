@@ -480,6 +480,15 @@
         </div>
       </div>
 
+      <!-- 送料 -->
+      <div class="feerate-row">
+        <span class="feerate-label">送料</span>
+        <div class="feerate-input-wrap">
+          <span class="feerate-unit">¥</span>
+          <input type="text" id="inp-shipping" class="feerate-input" placeholder="0" inputmode="numeric" maxlength="6" autocomplete="off" oninput="onShippingChange()" style="width:80px;text-align:right">
+        </div>
+      </div>
+
       <div class="field">
         <label>商品名</label>
         <input type="text" id="inp-keyword" placeholder="例：ポケモンカード 151 box" autocomplete="off">
@@ -501,12 +510,20 @@
           <span class="result-label">定価</span>
           <span class="result-value listprice" id="res-listprice">-</span>
         </div>
+        <div class="result-row" id="res-row-yahoo-fee" style="display:none">
+          <span class="result-label">Yahoo!手数料 (6%)</span>
+          <span class="result-value" id="res-yahoo-fee" style="color:#8b95a5">-</span>
+        </div>
+        <div class="result-row" id="res-row-shipping-cost" style="display:none">
+          <span class="result-label">送料</span>
+          <span class="result-value" id="res-shipping-cost" style="color:#8b95a5">-</span>
+        </div>
         <div class="result-row" id="res-row-fee" style="display:none">
-          <span class="result-label" id="res-fee-label">手数料</span>
+          <span class="result-label" id="res-fee-label">委託手数料</span>
           <span class="result-value" id="res-fee" style="color:#8b95a5">-</span>
         </div>
         <div class="result-row" id="res-row-diff" style="display:none">
-          <span class="result-label" id="res-diff-label">実益</span>
+          <span class="result-label">実益</span>
           <span class="result-value" id="res-diff">-</span>
         </div>
         <div class="result-links">
@@ -547,6 +564,7 @@
 
   // ── 設定 ──
   const SHOPPING_STORE_ID = 'shijimi-ya';  // ラッコポッケ Yahoo!店
+  const YAHOO_FEE_RATE = 6.0;             // Yahoo!ショッピング手数料率（固定）
 
   const MAX_HISTORY = 100;
   let records = [];
@@ -561,6 +579,7 @@
   // ── App ID 管理 ──
   let appId = localStorage.getItem('yahoo_app_id') || '';
   let feeRate = parseFloat(localStorage.getItem('fee_rate') || '') || 0;
+  let shippingCost = parseInt(localStorage.getItem('shipping_cost') || '') || 0;
 
   function initAppIdUI() {
     if (appId) {
@@ -602,6 +621,20 @@
   }
 
   initFeeRateUI();
+
+  function initShippingUI() {
+    if (shippingCost > 0) document.getElementById('inp-shipping').value = String(shippingCost);
+  }
+
+  function onShippingChange() {
+    const raw = document.getElementById('inp-shipping').value.trim();
+    const parsed = parseInt(raw);
+    shippingCost = (isFinite(parsed) && parsed >= 0) ? parsed : 0;
+    localStorage.setItem('shipping_cost', String(shippingCost));
+    renderHistory();
+  }
+
+  initShippingUI();
 
   // ── タブ切り替え ──
   function switchTab(tab) {
@@ -645,10 +678,12 @@
 
   function computeDiff(cheapest, listPrice) {
     if (cheapest == null || listPrice == null || listPrice <= 0) return null;
+    const yahooFee = Math.round(cheapest * YAHOO_FEE_RATE / 100);
+    const shipping = shippingCost > 0 ? shippingCost : 0;
     const fee = feeRate > 0 ? Math.round(cheapest * feeRate / 100) : 0;
-    const net = cheapest - listPrice - fee;
+    const net = cheapest - listPrice - yahooFee - shipping - fee;
     const pct = Math.round((net / listPrice) * 100);
-    return { net, pct, fee };
+    return { net, pct, yahooFee, shipping, fee };
   }
 
   function fmtDiff(diff) {
@@ -715,21 +750,35 @@
     }
 
     const diff = computeDiff(cheapest, effectiveListPrice);
+    const rowYahooFee = document.getElementById('res-row-yahoo-fee');
+    const rowShippingCost = document.getElementById('res-row-shipping-cost');
     const rowFee = document.getElementById('res-row-fee');
     if (diff) {
+      rowYahooFee.style.display = '';
+      document.getElementById('res-yahoo-fee').textContent = '-¥' + diff.yahooFee.toLocaleString('ja-JP');
+
+      if (diff.shipping > 0) {
+        rowShippingCost.style.display = '';
+        document.getElementById('res-shipping-cost').textContent = '-¥' + diff.shipping.toLocaleString('ja-JP');
+      } else {
+        rowShippingCost.style.display = 'none';
+      }
+
       if (diff.fee > 0) {
         rowFee.style.display = '';
-        document.getElementById('res-fee-label').textContent = `手数料 (${feeRate}%)`;
+        document.getElementById('res-fee-label').textContent = `委託手数料 (${feeRate}%)`;
         document.getElementById('res-fee').textContent = '-¥' + diff.fee.toLocaleString('ja-JP');
       } else {
         rowFee.style.display = 'none';
       }
+
       rowDiff.style.display = '';
-      document.getElementById('res-diff-label').textContent = diff.fee > 0 ? '実益' : '差益';
       const elDiff = document.getElementById('res-diff');
       elDiff.textContent = fmtDiff(diff);
       elDiff.className = 'result-value ' + (diff.net > 0 ? 'diff-pos' : 'diff-neg');
     } else {
+      rowYahooFee.style.display = 'none';
+      rowShippingCost.style.display = 'none';
       rowFee.style.display = 'none';
     }
 
