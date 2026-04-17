@@ -170,6 +170,46 @@
     }
     .appid-hint a { color: #2563eb; }
 
+    /* ── 手数料率 ── */
+    .feerate-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .feerate-label {
+      font-size: 0.72rem;
+      color: #8899aa;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .feerate-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .feerate-input {
+      width: 68px;
+      background: #0d1420;
+      border: 1px solid #2a3a50;
+      border-radius: 8px;
+      color: #e0e6f0;
+      font-size: 0.95rem;
+      padding: 8px 10px;
+      outline: none;
+      font-family: inherit;
+      text-align: right;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .feerate-input:focus { border-color: #2563eb; }
+    .feerate-unit {
+      font-size: 0.85rem;
+      color: #8899aa;
+    }
+
     .appid-status {
       display: flex;
       align-items: center;
@@ -237,6 +277,9 @@
       text-align: right;
     }
     .result-value.cheapest { color: #4ade80; }
+    .result-value.listprice { color: #e0e6f0; }
+    .result-value.diff-pos { color: #4ade80; }
+    .result-value.diff-neg { color: #8b95a5; }
     .result-value.none     { color: #4a5568; font-size: 0.85rem; font-weight: normal; }
     .result-value.loading  { color: #4a5568; font-size: 0.85rem; font-weight: normal; }
 
@@ -357,6 +400,14 @@
     .records-price-val { font-size: 0.8rem; font-weight: bold; }
     .records-price-val.cheapest { color: #4ade80; }
     .records-price-val.none     { color: #4a5568; font-weight: normal; }
+    .records-price-val.diff-pos { color: #4ade80; }
+    .records-price-val.diff-neg { color: #8b95a5; }
+    .records-price-val.editable {
+      cursor: pointer;
+      border-bottom: 1px dashed #3a4a60;
+      padding-bottom: 1px;
+    }
+    .records-price-val.editable:hover { border-bottom-color: #8899aa; }
     .records-datetime { font-size: 0.7rem; color: #4a5568; }
     .records-arrow { font-size: 0.85rem; color: #2a3a50; flex-shrink: 0; }
 
@@ -420,9 +471,23 @@
         <button class="btn-appid-change" onclick="resetAppId()">変更</button>
       </div>
 
+      <!-- 手数料率 -->
+      <div class="feerate-row">
+        <span class="feerate-label">委託手数料率</span>
+        <div class="feerate-input-wrap">
+          <input type="text" id="inp-feerate" class="feerate-input" placeholder="0" inputmode="decimal" maxlength="5" autocomplete="off" oninput="onFeeRateChange()">
+          <span class="feerate-unit">%</span>
+        </div>
+      </div>
+
       <div class="field">
         <label>商品名</label>
         <input type="text" id="inp-keyword" placeholder="例：ポケモンカード 151 box" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label>定価（任意）</label>
+        <input type="text" id="inp-listprice" placeholder="例：5500" inputmode="numeric" autocomplete="off">
       </div>
 
       <button class="btn-search" id="btn-fetch" onclick="doSearch()">価格を取得する</button>
@@ -431,6 +496,18 @@
         <div class="result-row">
           <span class="result-label">最安出品価格</span>
           <span class="result-value cheapest" id="res-cheapest">-</span>
+        </div>
+        <div class="result-row" id="res-row-listprice" style="display:none">
+          <span class="result-label">定価</span>
+          <span class="result-value listprice" id="res-listprice">-</span>
+        </div>
+        <div class="result-row" id="res-row-fee" style="display:none">
+          <span class="result-label" id="res-fee-label">手数料</span>
+          <span class="result-value" id="res-fee" style="color:#8b95a5">-</span>
+        </div>
+        <div class="result-row" id="res-row-diff" style="display:none">
+          <span class="result-label" id="res-diff-label">実益</span>
+          <span class="result-value" id="res-diff">-</span>
         </div>
         <div class="result-links">
           <a class="result-link" id="link-cheapest" href="#" target="_blank">→ 出品一覧を見る</a>
@@ -483,6 +560,7 @@
 
   // ── App ID 管理 ──
   let appId = localStorage.getItem('yahoo_app_id') || '';
+  let feeRate = parseFloat(localStorage.getItem('fee_rate') || '') || 0;
 
   function initAppIdUI() {
     if (appId) {
@@ -510,6 +588,20 @@
   }
 
   initAppIdUI();
+
+  function initFeeRateUI() {
+    if (feeRate > 0) document.getElementById('inp-feerate').value = String(feeRate);
+  }
+
+  function onFeeRateChange() {
+    const raw = document.getElementById('inp-feerate').value.trim();
+    const parsed = parseFloat(raw);
+    feeRate = (isFinite(parsed) && parsed >= 0) ? parsed : 0;
+    localStorage.setItem('fee_rate', String(feeRate));
+    renderHistory();
+  }
+
+  initFeeRateUI();
 
   // ── タブ切り替え ──
   function switchTab(tab) {
@@ -542,6 +634,31 @@
     return Math.min(...hits.map(h => h.price));
   }
 
+  // ── 差益計算 ──
+  function parseListPriceInput(raw) {
+    if (!raw) return null;
+    const digits = String(raw).replace(/[^\d]/g, '');
+    if (!digits) return null;
+    const n = Number(digits);
+    return (isFinite(n) && n > 0) ? n : null;
+  }
+
+  function computeDiff(cheapest, listPrice) {
+    if (cheapest == null || listPrice == null || listPrice <= 0) return null;
+    const fee = feeRate > 0 ? Math.round(cheapest * feeRate / 100) : 0;
+    const net = cheapest - listPrice - fee;
+    const pct = Math.round((net / listPrice) * 100);
+    return { net, pct, fee };
+  }
+
+  function fmtDiff(diff) {
+    if (!diff) return null;
+    const sign = diff.net >= 0 ? '+' : '-';
+    const yenStr = Math.abs(diff.net).toLocaleString('ja-JP');
+    const pctStr = Math.abs(diff.pct);
+    return `${sign}¥${yenStr} (${sign}${pctStr}%)`;
+  }
+
   // ── メイン検索処理 ──
   async function doSearch() {
     if (!appId) {
@@ -550,6 +667,11 @@
     }
     const keyword = document.getElementById('inp-keyword').value.trim();
     if (!keyword) { document.getElementById('inp-keyword').focus(); return; }
+
+    const inpListPrice = document.getElementById('inp-listprice');
+    const inputListPrice = parseListPriceInput(inpListPrice.value);
+    const existing = records.find(h => h.keyword === keyword);
+    const effectiveListPrice = inputListPrice ?? existing?.listPrice ?? null;
 
     const btn = document.getElementById('btn-fetch');
     btn.disabled = true;
@@ -560,6 +682,18 @@
 
     const elCheapest = document.getElementById('res-cheapest');
     elCheapest.textContent = '取得中...'; elCheapest.className = 'result-value loading';
+
+    const rowLp = document.getElementById('res-row-listprice');
+    const elLp = document.getElementById('res-listprice');
+    if (effectiveListPrice != null) {
+      rowLp.style.display = '';
+      elLp.textContent = '¥' + effectiveListPrice.toLocaleString('ja-JP');
+    } else {
+      rowLp.style.display = 'none';
+    }
+
+    const rowDiff = document.getElementById('res-row-diff');
+    rowDiff.style.display = 'none';
 
     document.getElementById('link-cheapest').href = `https://store.shopping.yahoo.co.jp/${SHOPPING_STORE_ID}/search.html?p=${encodeURIComponent(keyword)}&X=12`;
     document.getElementById('link-amazon').href = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}`;
@@ -580,12 +714,33 @@
       elCheapest.className = 'result-value none';
     }
 
+    const diff = computeDiff(cheapest, effectiveListPrice);
+    const rowFee = document.getElementById('res-row-fee');
+    if (diff) {
+      if (diff.fee > 0) {
+        rowFee.style.display = '';
+        document.getElementById('res-fee-label').textContent = `手数料 (${feeRate}%)`;
+        document.getElementById('res-fee').textContent = '-¥' + diff.fee.toLocaleString('ja-JP');
+      } else {
+        rowFee.style.display = 'none';
+      }
+      rowDiff.style.display = '';
+      document.getElementById('res-diff-label').textContent = diff.fee > 0 ? '実益' : '差益';
+      const elDiff = document.getElementById('res-diff');
+      elDiff.textContent = fmtDiff(diff);
+      elDiff.className = 'result-value ' + (diff.net > 0 ? 'diff-pos' : 'diff-neg');
+    } else {
+      rowFee.style.display = 'none';
+    }
+
     btn.disabled = false;
     btn.textContent = '価格を取得する';
 
     if (cheapest !== null) {
-      addHistory(keyword, cheapest);
+      addHistory(keyword, cheapest, effectiveListPrice);
     }
+
+    inpListPrice.value = '';
   }
 
   // ── 履歴 ──
@@ -598,11 +753,32 @@
     docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
   }
 
-  function addHistory(keyword, cheapest) {
-    const entry = { keyword, cheapest: cheapest ?? null, datetime: formatDatetime(new Date()) };
+  function addHistory(keyword, cheapest, listPrice) {
+    const entry = {
+      keyword,
+      cheapest: cheapest ?? null,
+      listPrice: listPrice ?? null,
+      datetime: formatDatetime(new Date())
+    };
     const filtered = records.filter(h => h.keyword !== keyword);
     filtered.unshift(entry);
     records = filtered.slice(0, MAX_HISTORY);
+    save();
+    renderHistory();
+  }
+
+  function editListPrice(idx) {
+    if (reorderMode) return;
+    if (selectMode) { toggleSelectItem(idx); return; }
+    const h = records[idx];
+    if (!h) return;
+    const current = h.listPrice != null ? String(h.listPrice) : '';
+    const input = prompt(`「${h.keyword}」の定価を入力してください（空欄で削除）`, current);
+    if (input === null) return;
+    const trimmed = input.trim();
+    const newVal = trimmed === '' ? null : parseListPriceInput(trimmed);
+    if (trimmed !== '' && newVal == null) return;
+    records[idx] = { ...h, listPrice: newVal };
     save();
     renderHistory();
   }
@@ -656,8 +832,11 @@
       return;
     }
 
-    const makeBody = (h) => {
+    const makeBody = (h, idx) => {
       const cp = fmtPrice(h.cheapest);
+      const lp = fmtPrice(h.listPrice);
+      const diff = computeDiff(h.cheapest, h.listPrice);
+      const diffStr = fmtDiff(diff);
       return `
         <div class="records-item-body">
           <div class="records-keyword">${esc(h.keyword)}</div>
@@ -666,6 +845,15 @@
               <span class="records-price-label">最安</span>
               <span class="records-price-val${cp ? ' cheapest' : ' none'}">${cp ?? '-'}</span>
             </div>
+            <div class="records-price-item">
+              <span class="records-price-label">定価</span>
+              <span class="records-price-val editable${lp ? '' : ' none'}" onclick="event.stopPropagation(); editListPrice(${idx})">${lp ?? '-'}</span>
+            </div>
+            ${diffStr ? `
+            <div class="records-price-item">
+              <span class="records-price-label">${diff.fee > 0 ? '実益' : '差益'}</span>
+              <span class="records-price-val ${diff.net > 0 ? 'diff-pos' : 'diff-neg'}">${diffStr}</span>
+            </div>` : ''}
           </div>
           <div class="records-datetime">${h.datetime}</div>
         </div>`;
@@ -674,7 +862,7 @@
     if (reorderMode) {
       list.innerHTML = records.map((h, fi) => `
         <div class="records-item" data-filter-idx="${fi}" onclick="onItemClick(${fi})">
-          ${makeBody(h)}
+          ${makeBody(h, fi)}
           <div style="display:flex;align-items:center;flex-shrink:0">
             <span class="drag-handle" data-filter-idx="${fi}">☰</span>
           </div>
@@ -691,7 +879,7 @@
     list.innerHTML = records.map((h, i) => `
       <div class="records-item${selectedIdxs.has(i) ? ' selected' : ''}" onclick="onItemClick(${i})">
         <div class="records-check"><input type="checkbox" ${selectedIdxs.has(i) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectItem(${i})"></div>
-        ${makeBody(h)}
+        ${makeBody(h, i)}
         <div style="display:flex;align-items:center;flex-shrink:0;gap:6px">
           <span class="records-arrow">›</span>
         </div>
