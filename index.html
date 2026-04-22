@@ -351,88 +351,33 @@
     .history-edit-btn:hover { color: #8899aa; border-color: #4a5568; }
     .select-mode .history-edit-btn { display: none; }
 
-    /* ── 編集モーダル ── */
-    .modal-overlay {
+    /* ── 編集モード ── */
+    .edit-banner {
       display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: #111827;
-      border: 1px solid #1e2a3a;
-      border-radius: 16px;
-      padding: 24px;
-      width: 100%;
-      max-width: 440px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .modal-title {
-      font-size: 0.78rem;
-      color: #4a90d9;
-      font-weight: bold;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .modal-field label {
-      display: block;
-      font-size: 0.72rem;
-      color: #8899aa;
-      font-weight: bold;
-      letter-spacing: 0.04em;
-      margin-bottom: 6px;
-    }
-    .modal-field input[type="text"] {
-      width: 100%;
-      background: #0d1420;
-      border: 1px solid #2a3a50;
+      background: #0f1f10;
+      border: 1px solid #166534;
       border-radius: 8px;
-      color: #e0e6f0;
-      font-size: 1rem;
-      padding: 10px 12px;
-      outline: none;
-      font-family: inherit;
-      transition: border-color 0.2s;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-    .modal-field input[type="text"]:focus { border-color: #2563eb; }
-    .modal-field input[type="text"]::placeholder { color: #3a4a60; }
-    .modal-btns {
-      display: flex;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: #4ade80;
+      font-weight: bold;
+      align-items: center;
+      justify-content: space-between;
       gap: 10px;
     }
-    .btn-modal-save {
-      flex: 1;
-      padding: 12px;
-      background: #1d4ed8;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: bold;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .btn-modal-save:hover { background: #1e40af; }
-    .btn-modal-cancel {
-      padding: 12px 18px;
+    .edit-banner.show { display: flex; }
+    .btn-cancel-edit {
+      font-size: 0.68rem;
+      color: #4a5568;
       background: none;
-      color: #8899aa;
       border: 1px solid #2a3a50;
-      border-radius: 8px;
-      font-size: 0.95rem;
+      border-radius: 5px;
+      padding: 4px 10px;
       cursor: pointer;
       font-family: inherit;
+      white-space: nowrap;
     }
-    .btn-modal-cancel:hover { color: #e0e6f0; }
+    .btn-cancel-edit:hover { color: #8899aa; }
   </style>
 </head>
 <body>
@@ -440,7 +385,11 @@
   <h1>販売代行計算表</h1>
 
   <div class="card">
-    <span class="form-title">新規試算</span>
+    <!-- 編集モードバナー -->
+    <div class="edit-banner" id="edit-banner">
+      <span>履歴を編集中</span>
+      <button class="btn-cancel-edit" onclick="cancelEdit()">キャンセル</button>
+    </div>
 
     <!-- 商品名 -->
     <div class="field">
@@ -509,7 +458,7 @@
       </div>
     </div>
 
-    <button class="btn-calc" onclick="doCalc()">試算する</button>
+    <button class="btn-calc" id="btn-calc" onclick="doCalc()">試算する</button>
 
     <!-- 結果 -->
     <div class="result-card" id="result-card" style="display:none">
@@ -540,40 +489,6 @@
       <div class="result-row" id="res-row-profit" style="display:none">
         <span class="result-label">あなたの利益</span>
         <span class="result-value" id="res-profit">-</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 編集モーダル -->
-  <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
-    <div class="modal">
-      <span class="modal-title">履歴を編集</span>
-      <div class="modal-field">
-        <label>商品名</label>
-        <input type="text" id="modal-keyword" autocomplete="off">
-      </div>
-      <div class="modal-field">
-        <label>Yahoo!ショッピング販売価格</label>
-        <input type="text" id="modal-price" inputmode="numeric" autocomplete="off">
-      </div>
-      <div class="modal-field">
-        <label>荷物のサイズ（顧客への送料）</label>
-        <input type="hidden" id="modal-size" value="385">
-        <div class="cs-wrap" id="cs-modal">
-          <button type="button" class="cs-trigger" onclick="csToggle('cs-modal')">
-            <span id="cs-modal-label">ネコポス</span>
-            <span class="cs-arrow">▼</span>
-          </button>
-          <div class="cs-opts" id="cs-modal-opts"></div>
-        </div>
-      </div>
-      <div class="modal-field">
-        <label>代行依頼主の買値（任意）</label>
-        <input type="text" id="modal-cost" inputmode="numeric" autocomplete="off" placeholder="未入力でも可">
-      </div>
-      <div class="modal-btns">
-        <button class="btn-modal-cancel" onclick="closeModal()">キャンセル</button>
-        <button class="btn-modal-save" onclick="saveEdit()">保存</button>
       </div>
     </div>
   </div>
@@ -724,20 +639,34 @@
 
     document.getElementById('result-card').style.display = '';
 
-    // Firebase に保存
     const keyword = document.getElementById('inp-keyword').value.trim();
     const sizeName = SHIPPING_SIZES.find(s => s.value === String(shipping))?.name ?? '';
-    const entry = {
-      keyword: keyword || '（商品名なし）',
-      price, shipping, shippingLabel: sizeName, yahooFee, subtotal, agencyFee, net,
-      cost: cost ?? null,
-      profit: cost != null ? net - cost : null,
-      datetime: formatDatetime(new Date())
-    };
-    const filtered = records.filter(r => !(r.keyword === entry.keyword && r.price === entry.price));
-    filtered.unshift(entry);
-    records = filtered.slice(0, MAX_HISTORY);
-    docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
+
+    if (editingIdx !== null) {
+      // 編集モード：既存レコードを上書き
+      records[editingIdx] = {
+        ...records[editingIdx],
+        keyword: keyword || '（商品名なし）',
+        price, shipping, shippingLabel: sizeName, yahooFee, subtotal, agencyFee, net,
+        cost: cost ?? null,
+        profit: cost != null ? net - cost : null,
+      };
+      docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
+      cancelEdit();
+    } else {
+      // 新規モード
+      const entry = {
+        keyword: keyword || '（商品名なし）',
+        price, shipping, shippingLabel: sizeName, yahooFee, subtotal, agencyFee, net,
+        cost: cost ?? null,
+        profit: cost != null ? net - cost : null,
+        datetime: formatDatetime(new Date())
+      };
+      const filtered = records.filter(r => !(r.keyword === entry.keyword && r.price === entry.price));
+      filtered.unshift(entry);
+      records = filtered.slice(0, MAX_HISTORY);
+      docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
+    }
   }
 
   function toggleSelectMode() {
@@ -780,41 +709,23 @@
     const r = records[idx];
     if (!r) return;
     editingIdx = idx;
-    document.getElementById('modal-keyword').value = r.keyword;
-    document.getElementById('modal-price').value   = r.price;
-    csSetValue('cs-modal', 'modal-size', 'cs-modal-label', r.shipping);
-    document.getElementById('modal-cost').value    = r.cost != null ? r.cost : '';
-    document.getElementById('modal-overlay').classList.add('open');
+    document.getElementById('inp-keyword').value = r.keyword === '（商品名なし）' ? '' : r.keyword;
+    document.getElementById('inp-price').value   = r.price;
+    csSetValue('cs-main', 'inp-size', 'cs-main-label', String(r.shipping));
+    document.getElementById('inp-cost').value    = r.cost != null ? r.cost : '';
+    document.getElementById('edit-banner').classList.add('show');
+    document.getElementById('btn-calc').textContent = '更新する';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function closeModal() {
-    document.getElementById('modal-overlay').classList.remove('open');
+  function cancelEdit() {
     editingIdx = null;
-  }
-
-  function saveEdit() {
-    if (editingIdx === null) return;
-    const price    = parsePrice(document.getElementById('modal-price').value);
-    const shipping = parseInt(document.getElementById('modal-size').value);
-    const keyword  = document.getElementById('modal-keyword').value.trim() || '（商品名なし）';
-    const cost     = parsePrice(document.getElementById('modal-cost').value);
-    const sizeName = SHIPPING_SIZES.find(s => s.value === String(shipping))?.name ?? '';
-    if (!price) { document.getElementById('modal-price').focus(); return; }
-
-    const yahooFee  = Math.round(price * YAHOO_FEE_RATE);
-    const subtotal  = price - yahooFee - shipping;
-    const agencyFee = Math.round(subtotal * AGENCY_FEE_RATE);
-    const net       = subtotal - agencyFee;
-
-    records[editingIdx] = {
-      ...records[editingIdx],
-      keyword, price, shipping, shippingLabel: sizeName,
-      yahooFee, subtotal, agencyFee, net,
-      cost: cost ?? null,
-      profit: cost != null ? net - cost : null,
-    };
-    docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
-    closeModal();
+    document.getElementById('inp-keyword').value = '';
+    document.getElementById('inp-price').value   = '';
+    csSetValue('cs-main', 'inp-size', 'cs-main-label', '');
+    document.getElementById('inp-cost').value    = '';
+    document.getElementById('edit-banner').classList.remove('show');
+    document.getElementById('btn-calc').textContent = '試算する';
     renderHistory();
   }
 
@@ -877,7 +788,6 @@
   document.addEventListener('keydown', e => { if (e.key === 'Enter') doCalc(); });
 
   csInit('cs-main',  'inp-size',   'cs-main-label',  '');
-  csInit('cs-modal', 'modal-size', 'cs-modal-label', '385');
 </script>
 
 </body>
