@@ -311,7 +311,7 @@
           <span class="input-prefix">¥</span>
           <input type="text" id="inp-minprice" placeholder="0" inputmode="numeric" autocomplete="off">
         </div>
-        <button class="btn-yahoo" onclick="openYahoo()">Yahoo!で確認 →</button>
+        <button class="btn-yahoo" onclick="openYahoo()">Yahoo!で確認</button>
       </div>
     </div>
 
@@ -553,7 +553,7 @@
     const keyword = document.getElementById('inp-keyword').value.trim();
     if (!keyword) { document.getElementById('inp-keyword').focus(); return; }
     const minPrice = parsePrice(document.getElementById('inp-minprice').value);
-    const params = new URLSearchParams({ p: keyword, sort: 'price' });
+    const params = new URLSearchParams({ p: keyword, aq: '-1', sort: 'price' });
     if (minPrice) params.set('min_price', minPrice);
     window.open('https://shopping.yahoo.co.jp/search?' + params.toString(), '_blank');
   }
