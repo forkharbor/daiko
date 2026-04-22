@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" href="logo.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ラッコポッケ 価格調査</title>
+  <title>空売り計算表</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -33,39 +33,6 @@
       margin-bottom: 36px;
     }
 
-    /* ── タブ ── */
-    .tab-bar {
-      display: flex;
-      width: 100%;
-      max-width: 480px;
-      margin-bottom: 20px;
-      background: #111827;
-      border: 1px solid #1e2a3a;
-      border-radius: 12px;
-      padding: 4px;
-      gap: 4px;
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      background: none;
-      border: none;
-      border-radius: 8px;
-      color: #4a5568;
-      font-size: 0.85rem;
-      font-weight: bold;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
-      letter-spacing: 0.03em;
-      text-align: center;
-    }
-    .tab-btn.active { background: #1d4ed8; color: #fff; }
-
-    .tab-panel { display: none; width: 100%; }
-    .tab-panel.active { display: flex; flex-direction: column; align-items: center; }
-
-    /* ── 検索フォーム ── */
     .card {
       background: #111827;
       border: 1px solid #1e2a3a;
@@ -78,11 +45,6 @@
       gap: 20px;
     }
 
-    .form-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
     .form-title {
       font-size: 0.78rem;
       color: #4a90d9;
@@ -91,6 +53,7 @@
       text-transform: uppercase;
     }
 
+    /* ── フィールド ── */
     .field label {
       display: block;
       font-size: 0.72rem;
@@ -117,123 +80,89 @@
     .field input[type="text"]:focus { border-color: #2563eb; }
     .field input[type="text"]::placeholder { color: #3a4a60; }
 
-    /* ── App ID 設定 ── */
-    .appid-setup {
-      background: #0d1a10;
-      border: 1px solid #1a4a20;
-      border-radius: 10px;
-      padding: 14px 16px;
+    .field .input-with-prefix {
       display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .appid-setup-title {
-      font-size: 0.72rem;
-      color: #4ade80;
-      font-weight: bold;
-      letter-spacing: 0.04em;
-    }
-    .appid-row {
-      display: flex;
-      gap: 8px;
-    }
-    .appid-row input {
-      flex: 1;
+      align-items: center;
       background: #0d1420;
       border: 1px solid #2a3a50;
       border-radius: 8px;
-      color: #e0e6f0;
-      font-size: 0.8rem;
-      padding: 10px 12px;
-      outline: none;
-      font-family: monospace;
       transition: border-color 0.2s;
     }
-    .appid-row input:focus { border-color: #2563eb; }
-    .appid-row input::placeholder { color: #3a4a60; }
-    .btn-appid-save {
-      background: #065f46;
-      color: #4ade80;
+    .field .input-with-prefix:focus-within { border-color: #2563eb; }
+    .field .input-prefix {
+      padding: 12px 0 12px 14px;
+      font-size: 1rem;
+      color: #8899aa;
+    }
+    .field .input-with-prefix input {
+      flex: 1;
+      background: none;
       border: none;
-      border-radius: 8px;
-      padding: 10px 14px;
-      cursor: pointer;
-      font-size: 0.78rem;
-      font-weight: bold;
-      white-space: nowrap;
+      color: #e0e6f0;
+      font-size: 1rem;
+      padding: 12px 14px;
+      outline: none;
       font-family: inherit;
+      -webkit-appearance: none;
+      appearance: none;
+      text-align: right;
     }
-    .btn-appid-save:hover { background: #047857; }
-    .appid-hint {
-      font-size: 0.68rem;
-      color: #4a5568;
-      line-height: 1.6;
-    }
-    .appid-hint a { color: #2563eb; }
+    .field .input-with-prefix input::placeholder { color: #3a4a60; }
 
-    /* ── 手数料率 ── */
-    .feerate-row {
+    /* ── 固定表示行 ── */
+    .fixed-row {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 10px;
     }
-    .feerate-label {
+    .fixed-row-label {
       font-size: 0.72rem;
       color: #8899aa;
       font-weight: bold;
       letter-spacing: 0.04em;
-      white-space: nowrap;
-      flex: 1;
-    }
-    .feerate-input-wrap {
       display: flex;
       align-items: center;
       gap: 6px;
     }
-    .feerate-input {
-      width: 68px;
+    .fixed-badge {
+      font-size: 0.6rem;
+      color: #4a5568;
+      border: 1px solid #2a3a50;
+      border-radius: 3px;
+      padding: 1px 5px;
+      letter-spacing: 0.03em;
+    }
+    .fixed-val {
+      font-size: 0.95rem;
+      color: #4a5568;
+      font-weight: bold;
+    }
+
+    /* ── プルダウン ── */
+    .field select {
+      width: 100%;
       background: #0d1420;
       border: 1px solid #2a3a50;
       border-radius: 8px;
       color: #e0e6f0;
-      font-size: 0.95rem;
-      padding: 8px 10px;
+      font-size: 1rem;
+      padding: 12px 14px;
       outline: none;
       font-family: inherit;
-      text-align: right;
       transition: border-color 0.2s;
       -webkit-appearance: none;
       appearance: none;
-    }
-    .feerate-input:focus { border-color: #2563eb; }
-    .feerate-unit {
-      font-size: 0.85rem;
-      color: #8899aa;
-    }
-
-    .appid-status {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .appid-ok-label {
-      font-size: 0.72rem;
-      color: #4ade80;
-    }
-    .btn-appid-change {
-      font-size: 0.68rem;
-      color: #4a5568;
-      background: none;
-      border: 1px solid #2a3a50;
-      border-radius: 4px;
-      padding: 3px 8px;
       cursor: pointer;
-      font-family: inherit;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%234a5568' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
     }
-    .btn-appid-change:hover { color: #8899aa; }
+    .field select:focus { border-color: #2563eb; }
+    .field select option { background: #111827; }
 
-    /* ── 検索ボタン ── */
-    .btn-search {
+    /* ── 試算ボタン ── */
+    .btn-calc {
       width: 100%;
       padding: 15px;
       background: #1d4ed8;
@@ -248,9 +177,8 @@
       margin-top: 4px;
       font-family: inherit;
     }
-    .btn-search:hover { background: #1e40af; }
-    .btn-search:active { background: #1e3a9f; }
-    .btn-search:disabled { background: #1a2535; color: #4a5568; cursor: default; }
+    .btn-calc:hover { background: #1e40af; }
+    .btn-calc:active { background: #1e3a9f; }
 
     /* ── 結果カード ── */
     .result-card {
@@ -273,781 +201,199 @@
       white-space: nowrap;
     }
     .result-value {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: bold;
       text-align: right;
     }
-    .result-value.cheapest { color: #4ade80; }
-    .result-value.listprice { color: #e0e6f0; }
-    .result-value.diff-pos { color: #4ade80; }
-    .result-value.diff-neg { color: #8b95a5; }
-    .result-value.none     { color: #4a5568; font-size: 0.85rem; font-weight: normal; }
-    .result-value.loading  { color: #4a5568; font-size: 0.85rem; font-weight: normal; }
-
-    .result-links {
-      padding: 10px 16px;
-      border-top: 1px solid #1e2a3a;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
+    .result-value.price   { color: #e0e6f0; }
+    .result-value.deduct  { color: #8b95a5; }
+    .result-value.net-pos { color: #4ade80; font-size: 1.2rem; }
+    .result-value.net-neg { color: #f87171; font-size: 1.2rem; }
+    .result-row.net-row        { background: #0d1420; }
+    .result-row.your-profit-row {
+      background: #0f1f10;
+      border-top: 2px solid #166534;
     }
-    .result-link {
-      font-size: 0.72rem;
-      color: #2563eb;
-      text-decoration: none;
-    }
-    .result-link:hover { text-decoration: underline; }
-
-    /* ── 履歴 ── */
-    .records-section {
-      width: 100%;
-      max-width: 480px;
-    }
-    .records-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-    .records-header h2 {
-      font-size: 0.78rem;
-      color: #4a90d9;
-      font-weight: bold;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      flex: 1;
-    }
-    .btn-select-records, .btn-delete-selected {
-      font-size: 0.72rem;
-      color: #8899aa;
-      background: none;
-      border: 1px solid #2a3a50;
-      border-radius: 6px;
-      padding: 4px 10px;
-      cursor: pointer;
-      white-space: nowrap;
-      font-family: inherit;
-    }
-    .btn-select-records.active { color: #fbbf24; border-color: #92400e; background: #1c1408; }
-    .btn-delete-selected:hover { color: #e53e3e; border-color: #e53e3e; }
-
-    .btn-done-reorder {
-      display: none;
-      font-size: 0.72rem;
-      color: #4ade80;
-      background: none;
-      border: 1px solid #4ade80;
-      border-radius: 6px;
-      padding: 4px 10px;
-      cursor: pointer;
-      white-space: nowrap;
-      font-family: inherit;
-    }
-
-    .records-empty {
-      text-align: center;
-      color: #3a4a60;
-      font-size: 0.88rem;
-      padding: 24px 0;
-    }
-
-    .records-item {
-      background: #111827;
-      border: 1px solid #1e2a3a;
-      border-radius: 10px;
-      padding: 12px 14px;
-      margin-bottom: 8px;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s, transform 0.18s ease;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .records-item:hover { border-color: #2563eb; background: #0f1e3a; }
-    .records-item.selected { border-color: #2563eb; background: #0f1e3a; }
-    .records-item.dragging { opacity: 0.15; }
-
-    .records-check { display: none; flex-shrink: 0; }
-    .select-mode .records-check { display: block; }
-    .records-check input[type="checkbox"] {
-      width: 18px; height: 18px;
-      accent-color: #2563eb;
-      cursor: pointer;
-    }
-    .select-mode .records-arrow { display: none; }
-
-    .records-item-body { flex: 1; min-width: 0; }
-    .records-keyword {
-      font-size: 0.95rem;
-      color: #dde6f0;
-      font-weight: bold;
-      margin-bottom: 6px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .records-prices {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 4px;
-    }
-    .records-price-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .records-price-label { font-size: 0.65rem; color: #4a5568; white-space: nowrap; }
-    .records-price-val { font-size: 0.8rem; font-weight: bold; }
-    .records-price-val.cheapest { color: #4ade80; }
-    .records-price-val.none     { color: #4a5568; font-weight: normal; }
-    .records-price-val.diff-pos { color: #4ade80; }
-    .records-price-val.diff-neg { color: #8b95a5; }
-    .records-price-val.editable {
-      cursor: pointer;
-      border-bottom: 1px dashed #3a4a60;
-      padding-bottom: 1px;
-    }
-    .records-price-val.editable:hover { border-bottom-color: #8899aa; }
-    .records-datetime { font-size: 0.7rem; color: #4a5568; }
-    .records-arrow { font-size: 0.85rem; color: #2a3a50; flex-shrink: 0; }
-
-    /* ── ドラッグ並び替え ── */
-    .drag-handle {
-      display: none;
-      font-size: 1.2rem;
-      color: #4a5568;
-      padding: 4px 8px;
-      cursor: grab;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: none;
-    }
-    .reorder-mode .drag-handle { display: block; }
-    .reorder-mode .records-arrow { display: none !important; }
-    .drag-ghost {
-      position: fixed;
-      pointer-events: none;
-      z-index: 500;
-      background: #111827;
-      border: 1px solid #2563eb;
-      border-radius: 10px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-      opacity: 0.92;
-      transition: none !important;
-    }
+    .your-profit-label { color: #4ade80 !important; }
+    .your-profit-val   { color: #4ade80; font-size: 1.4rem; }
   </style>
 </head>
 <body>
 
-  <h1>ラッコポッケ Yahoo!店</h1>
+  <h1>空売り計算表</h1>
   <p class="subtitle">最安出品価格を取得します</p>
 
-  <div class="tab-bar">
-    <button class="tab-btn active" id="tab-btn-history" onclick="switchTab('history')">検索履歴</button>
-    <button class="tab-btn" id="tab-btn-search" onclick="switchTab('search')">新規検索</button>
+  <div class="card">
+    <span class="form-title">新規試算</span>
+
+    <!-- 商品名 -->
+    <div class="field">
+      <label>商品名</label>
+      <input type="text" id="inp-keyword" placeholder="例：ポケモンカード 151 box" autocomplete="off">
+    </div>
+
+    <!-- Yahoo!ショッピング販売価格 -->
+    <div class="field">
+      <label>Yahoo!ショッピング販売価格</label>
+      <div class="input-with-prefix">
+        <span class="input-prefix">¥</span>
+        <input type="text" id="inp-price" placeholder="0" inputmode="numeric" autocomplete="off" oninput="onInputChange()">
+      </div>
+    </div>
+
+    <!-- Yahoo!販売手数料（固定6%） -->
+    <div class="fixed-row">
+      <span class="fixed-row-label">
+        Yahoo!ショッピング販売手数料
+        <span class="fixed-badge">固定</span>
+      </span>
+      <span class="fixed-val">6%</span>
+    </div>
+
+    <!-- 荷物のサイズ（顧客への送料） -->
+    <div class="field">
+      <label>荷物のサイズ（顧客への送料）</label>
+      <select id="inp-size" onchange="onInputChange()">
+        <option value="">選択してください</option>
+        <option value="385">ネコポス ― ¥385</option>
+        <option value="770">60サイズ ― ¥770</option>
+        <option value="880">80サイズ ― ¥880</option>
+        <option value="1100">100サイズ ― ¥1,100</option>
+        <option value="1320">120サイズ ― ¥1,320</option>
+        <option value="1540">140サイズ ― ¥1,540</option>
+        <option value="1760">160サイズ ― ¥1,760</option>
+      </select>
+    </div>
+
+    <!-- 代行手数料（固定10%） -->
+    <div class="fixed-row">
+      <span class="fixed-row-label">
+        代行手数料
+        <span class="fixed-badge">固定</span>
+      </span>
+      <span class="fixed-val">10%</span>
+    </div>
+
+    <!-- 代行依頼主の手取り -->
+    <div class="field">
+      <label>代行依頼主の手取り</label>
+      <div class="input-with-prefix">
+        <span class="input-prefix">¥</span>
+        <input type="text" id="inp-net" placeholder="0" inputmode="numeric" autocomplete="off" oninput="onInputChange()">
+      </div>
+    </div>
+
+    <!-- 代行依頼主の買値 -->
+    <div class="field">
+      <label>代行依頼主の買値</label>
+      <div class="input-with-prefix">
+        <span class="input-prefix">¥</span>
+        <input type="text" id="inp-cost" placeholder="0" inputmode="numeric" autocomplete="off" oninput="onInputChange()">
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="doCalc()">試算する</button>
+
+    <!-- 結果 -->
+    <div class="result-card" id="result-card" style="display:none">
+      <div class="result-row">
+        <span class="result-label">販売価格</span>
+        <span class="result-value price" id="res-price">-</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Yahoo!手数料 (6%)</span>
+        <span class="result-value deduct" id="res-yahoo-fee">-</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">送料</span>
+        <span class="result-value deduct" id="res-shipping">-</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">代行手数料 (10%)</span>
+        <span class="result-value deduct" id="res-agency-fee">-</span>
+      </div>
+      <div class="result-row net-row">
+        <span class="result-label">代行依頼主の手取り</span>
+        <span class="result-value" id="res-net">-</span>
+      </div>
+      <div class="result-row" id="res-row-profit" style="display:none">
+        <span class="result-label">損益（手取り − 買値）</span>
+        <span class="result-value" id="res-profit">-</span>
+      </div>
+      <div class="result-row your-profit-row">
+        <span class="result-label your-profit-label">あなたの利益は・・・・</span>
+        <span class="result-value your-profit-val" id="res-your-profit">-</span>
+      </div>
+    </div>
   </div>
 
-  <!-- 新規検索パネル -->
-  <div id="panel-search" class="tab-panel">
-    <div class="card">
-      <div class="form-header">
-        <span class="form-title">新規検索</span>
-      </div>
-
-      <!-- App ID 未設定時 -->
-      <div class="appid-setup" id="appid-setup">
-        <div class="appid-setup-title">Yahoo! App ID を設定してください</div>
-        <div class="appid-row">
-          <input type="text" id="inp-appid" placeholder="dj00aiZp..." autocomplete="off" spellcheck="false">
-          <button class="btn-appid-save" onclick="saveAppId()">保存</button>
-        </div>
-        <div class="appid-hint">
-          <a href="https://developer.yahoo.co.jp/start/" target="_blank">Yahoo!デベロッパーネットワーク</a> でアプリを登録し、Client ID（App ID）を貼り付けてください。無料で取得できます。
-        </div>
-      </div>
-
-      <!-- App ID 設定済み時 -->
-      <div class="appid-status" id="appid-status" style="display:none">
-        <span class="appid-ok-label">App ID: 設定済み</span>
-        <button class="btn-appid-change" onclick="resetAppId()">変更</button>
-      </div>
-
-      <!-- 手数料率 -->
-      <div class="feerate-row">
-        <span class="feerate-label">委託手数料率</span>
-        <div class="feerate-input-wrap">
-          <input type="text" id="inp-feerate" class="feerate-input" placeholder="0" inputmode="decimal" maxlength="5" autocomplete="off" oninput="onFeeRateChange()">
-          <span class="feerate-unit">%</span>
-        </div>
-      </div>
-
-      <!-- 送料 -->
-      <div class="feerate-row">
-        <span class="feerate-label">送料</span>
-        <div class="feerate-input-wrap">
-          <span class="feerate-unit">¥</span>
-          <input type="text" id="inp-shipping" class="feerate-input" placeholder="0" inputmode="numeric" maxlength="6" autocomplete="off" oninput="onShippingChange()" style="width:80px;text-align:right">
-        </div>
-      </div>
-
-      <div class="field">
-        <label>商品名</label>
-        <input type="text" id="inp-keyword" placeholder="例：ポケモンカード 151 box" autocomplete="off">
-      </div>
-
-      <div class="field">
-        <label>定価（任意）</label>
-        <input type="text" id="inp-listprice" placeholder="例：5500" inputmode="numeric" autocomplete="off">
-      </div>
-
-      <button class="btn-search" id="btn-fetch" onclick="doSearch()">価格を取得する</button>
-
-      <div class="result-card" id="result-card" style="display:none">
-        <div class="result-row">
-          <span class="result-label">最安出品価格</span>
-          <span class="result-value cheapest" id="res-cheapest">-</span>
-        </div>
-        <div class="result-row" id="res-row-listprice" style="display:none">
-          <span class="result-label">定価</span>
-          <span class="result-value listprice" id="res-listprice">-</span>
-        </div>
-        <div class="result-row" id="res-row-yahoo-fee" style="display:none">
-          <span class="result-label">Yahoo!手数料 (6%)</span>
-          <span class="result-value" id="res-yahoo-fee" style="color:#8b95a5">-</span>
-        </div>
-        <div class="result-row" id="res-row-shipping-cost" style="display:none">
-          <span class="result-label">送料</span>
-          <span class="result-value" id="res-shipping-cost" style="color:#8b95a5">-</span>
-        </div>
-        <div class="result-row" id="res-row-fee" style="display:none">
-          <span class="result-label" id="res-fee-label">委託手数料</span>
-          <span class="result-value" id="res-fee" style="color:#8b95a5">-</span>
-        </div>
-        <div class="result-row" id="res-row-diff" style="display:none">
-          <span class="result-label">実益</span>
-          <span class="result-value" id="res-diff">-</span>
-        </div>
-        <div class="result-links">
-          <a class="result-link" id="link-cheapest" href="#" target="_blank">→ 出品一覧を見る</a>
-          <a class="result-link" id="link-amazon" href="#" target="_blank">→ Amazonで検索</a>
-        </div>
-      </div>
-    </div>
-  </div><!-- /panel-search -->
-
-  <!-- 履歴パネル -->
-  <div id="panel-history" class="tab-panel active">
-    <div class="records-section">
-      <div class="records-header">
-        <h2>検索履歴</h2>
-        <button class="btn-select-records" id="btn-select" onclick="toggleSelectMode()">選択</button>
-        <button class="btn-done-reorder" id="btn-done-reorder" onclick="exitReorderMode()">完了</button>
-        <button class="btn-delete-selected" id="btn-delete-selected" onclick="deleteSelected()" style="display:none">削除</button>
-      </div>
-      <div id="records-list"></div>
-    </div>
-  </div><!-- /panel-history -->
-
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
-  // ── Firebase 初期化 ──
-  firebase.initializeApp({
-    apiKey: "AIzaSyCfvqQWLB8NJqmaH0k2G0wPcbJJjz2Vu4A",
-    authDomain: "kaimemo-58bad.firebaseapp.com",
-    projectId: "kaimemo-58bad",
-    storageBucket: "kaimemo-58bad.firebasestorage.app",
-    messagingSenderId: "308069117698",
-    appId: "1:308069117698:web:c61a57853abb7e8ffb1c1b"
-  });
-  const db = firebase.firestore();
-  const docRef = db.collection('data').doc('raccoo-price');
+  const YAHOO_FEE_RATE  = 0.06;
+  const AGENCY_FEE_RATE = 0.10;
 
-  // ── 設定 ──
-  const SHOPPING_STORE_ID = 'shijimi-ya';  // ラッコポッケ Yahoo!店
-  const YAHOO_FEE_RATE = 6.0;             // Yahoo!ショッピング手数料率（固定）
-
-  const MAX_HISTORY = 100;
-  let records = [];
-  let selectMode = false;
-  let selectedIdxs = new Set();
-  let reorderMode = false;
-  let dragState = null;
-  let longPressTimer = null;
-  let longPressStart = { x: 0, y: 0 };
-  let activeTab = 'history';
-
-  // ── App ID 管理 ──
-  let appId = localStorage.getItem('yahoo_app_id') || '';
-  let feeRate = parseFloat(localStorage.getItem('fee_rate') || '') || 0;
-  let shippingCost = parseInt(localStorage.getItem('shipping_cost') || '') || 0;
-
-  function initAppIdUI() {
-    if (appId) {
-      document.getElementById('appid-setup').style.display = 'none';
-      document.getElementById('appid-status').style.display = 'flex';
-    } else {
-      document.getElementById('appid-setup').style.display = '';
-      document.getElementById('appid-status').style.display = 'none';
-    }
-  }
-
-  function saveAppId() {
-    const val = document.getElementById('inp-appid').value.trim();
-    if (!val) { document.getElementById('inp-appid').focus(); return; }
-    appId = val;
-    localStorage.setItem('yahoo_app_id', appId);
-    initAppIdUI();
-  }
-
-  function resetAppId() {
-    appId = '';
-    localStorage.removeItem('yahoo_app_id');
-    document.getElementById('inp-appid').value = '';
-    initAppIdUI();
-  }
-
-  initAppIdUI();
-
-  function initFeeRateUI() {
-    if (feeRate > 0) document.getElementById('inp-feerate').value = String(feeRate);
-  }
-
-  function onFeeRateChange() {
-    const raw = document.getElementById('inp-feerate').value.trim();
-    const parsed = parseFloat(raw);
-    feeRate = (isFinite(parsed) && parsed >= 0) ? parsed : 0;
-    localStorage.setItem('fee_rate', String(feeRate));
-    renderHistory();
-  }
-
-  initFeeRateUI();
-
-  function initShippingUI() {
-    if (shippingCost > 0) document.getElementById('inp-shipping').value = String(shippingCost);
-  }
-
-  function onShippingChange() {
-    const raw = document.getElementById('inp-shipping').value.trim();
-    const parsed = parseInt(raw);
-    shippingCost = (isFinite(parsed) && parsed >= 0) ? parsed : 0;
-    localStorage.setItem('shipping_cost', String(shippingCost));
-    renderHistory();
-  }
-
-  initShippingUI();
-
-  // ── タブ切り替え ──
-  function switchTab(tab) {
-    activeTab = tab;
-    document.getElementById('tab-btn-search').classList.toggle('active', tab === 'search');
-    document.getElementById('tab-btn-history').classList.toggle('active', tab === 'history');
-    document.getElementById('panel-search').classList.toggle('active', tab === 'search');
-    document.getElementById('panel-history').classList.toggle('active', tab === 'history');
-  }
-
-  // ── Yahoo! Shopping API ──
-  async function fetchCheapestPrice(keyword) {
-    if (!appId) throw new Error('App ID未設定');
-    const params = new URLSearchParams({
-      appid: appId,
-      query: keyword,
-      results: '50',
-    });
-    const resp = await fetch(
-      `https://yahoo-proxy.nakamuras98789.workers.dev/?${params}`,
-      { signal: AbortSignal.timeout(12000) }
-    );
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => '');
-      throw new Error(`API ${resp.status}: ${text.slice(0, 80)}`);
-    }
-    const data = await resp.json();
-    const hits = (data.hits || []).filter(h => h.seller?.sellerId === SHOPPING_STORE_ID);
-    if (!hits.length) return null;
-    return Math.min(...hits.map(h => h.price));
-  }
-
-  // ── 差益計算 ──
-  function parseListPriceInput(raw) {
-    if (!raw) return null;
+  function parsePrice(raw) {
     const digits = String(raw).replace(/[^\d]/g, '');
     if (!digits) return null;
     const n = Number(digits);
     return (isFinite(n) && n > 0) ? n : null;
   }
 
-  function computeDiff(cheapest, listPrice) {
-    if (cheapest == null || listPrice == null || listPrice <= 0) return null;
-    const yahooFee = Math.round(cheapest * YAHOO_FEE_RATE / 100);
-    const shipping = shippingCost > 0 ? shippingCost : 0;
-    const fee = feeRate > 0 ? Math.round(cheapest * feeRate / 100) : 0;
-    const net = cheapest - listPrice - yahooFee - shipping - fee;
-    const pct = Math.round((net / listPrice) * 100);
-    return { net, pct, yahooFee, shipping, fee };
+  function fmt(n) {
+    return '¥' + Math.abs(n).toLocaleString('ja-JP');
   }
 
-  function fmtDiff(diff) {
-    if (!diff) return null;
-    const sign = diff.net >= 0 ? '+' : '-';
-    const yenStr = Math.abs(diff.net).toLocaleString('ja-JP');
-    const pctStr = Math.abs(diff.pct);
-    return `${sign}¥${yenStr} (${sign}${pctStr}%)`;
+  function onInputChange() {
+    // 入力変更時に結果をクリア
+    document.getElementById('result-card').style.display = 'none';
   }
 
-  // ── メイン検索処理 ──
-  async function doSearch() {
-    if (!appId) {
-      document.getElementById('inp-appid').focus();
+  function doCalc() {
+    const price = parsePrice(document.getElementById('inp-price').value);
+    const shippingVal = document.getElementById('inp-size').value;
+
+    if (!price) {
+      document.getElementById('inp-price').focus();
       return;
     }
-    const keyword = document.getElementById('inp-keyword').value.trim();
-    if (!keyword) { document.getElementById('inp-keyword').focus(); return; }
-
-    const inpListPrice = document.getElementById('inp-listprice');
-    const inputListPrice = parseListPriceInput(inpListPrice.value);
-    const existing = records.find(h => h.keyword === keyword);
-    const effectiveListPrice = inputListPrice ?? existing?.listPrice ?? null;
-
-    const btn = document.getElementById('btn-fetch');
-    btn.disabled = true;
-    btn.textContent = '取得中...';
-
-    const resultCard = document.getElementById('result-card');
-    resultCard.style.display = '';
-
-    const elCheapest = document.getElementById('res-cheapest');
-    elCheapest.textContent = '取得中...'; elCheapest.className = 'result-value loading';
-
-    const rowLp = document.getElementById('res-row-listprice');
-    const elLp = document.getElementById('res-listprice');
-    if (effectiveListPrice != null) {
-      rowLp.style.display = '';
-      elLp.textContent = '¥' + effectiveListPrice.toLocaleString('ja-JP');
-    } else {
-      rowLp.style.display = 'none';
-    }
-
-    const rowDiff = document.getElementById('res-row-diff');
-    rowDiff.style.display = 'none';
-
-    document.getElementById('link-cheapest').href = `https://store.shopping.yahoo.co.jp/${SHOPPING_STORE_ID}/search.html?p=${encodeURIComponent(keyword)}&X=12`;
-    document.getElementById('link-amazon').href = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}`;
-
-    let cheapest = null;
-    let cheapestErr = null;
-    try {
-      cheapest = await fetchCheapestPrice(keyword);
-    } catch(e) {
-      cheapestErr = e.message;
-    }
-
-    if (cheapest !== null) {
-      elCheapest.textContent = '¥' + cheapest.toLocaleString('ja-JP');
-      elCheapest.className = 'result-value cheapest';
-    } else {
-      elCheapest.textContent = cheapestErr || '出品なし';
-      elCheapest.className = 'result-value none';
-    }
-
-    const diff = computeDiff(cheapest, effectiveListPrice);
-    const rowYahooFee = document.getElementById('res-row-yahoo-fee');
-    const rowShippingCost = document.getElementById('res-row-shipping-cost');
-    const rowFee = document.getElementById('res-row-fee');
-    if (diff) {
-      rowYahooFee.style.display = '';
-      document.getElementById('res-yahoo-fee').textContent = '-¥' + diff.yahooFee.toLocaleString('ja-JP');
-
-      if (diff.shipping > 0) {
-        rowShippingCost.style.display = '';
-        document.getElementById('res-shipping-cost').textContent = '-¥' + diff.shipping.toLocaleString('ja-JP');
-      } else {
-        rowShippingCost.style.display = 'none';
-      }
-
-      if (diff.fee > 0) {
-        rowFee.style.display = '';
-        document.getElementById('res-fee-label').textContent = `委託手数料 (${feeRate}%)`;
-        document.getElementById('res-fee').textContent = '-¥' + diff.fee.toLocaleString('ja-JP');
-      } else {
-        rowFee.style.display = 'none';
-      }
-
-      rowDiff.style.display = '';
-      const elDiff = document.getElementById('res-diff');
-      elDiff.textContent = fmtDiff(diff);
-      elDiff.className = 'result-value ' + (diff.net > 0 ? 'diff-pos' : 'diff-neg');
-    } else {
-      rowYahooFee.style.display = 'none';
-      rowShippingCost.style.display = 'none';
-      rowFee.style.display = 'none';
-    }
-
-    btn.disabled = false;
-    btn.textContent = '価格を取得する';
-
-    if (cheapest !== null) {
-      addHistory(keyword, cheapest, effectiveListPrice);
-    }
-
-    inpListPrice.value = '';
-  }
-
-  // ── 履歴 ──
-  function formatDatetime(d) {
-    const p = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
-  }
-
-  function save() {
-    docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
-  }
-
-  function addHistory(keyword, cheapest, listPrice) {
-    const entry = {
-      keyword,
-      cheapest: cheapest ?? null,
-      listPrice: listPrice ?? null,
-      datetime: formatDatetime(new Date())
-    };
-    const filtered = records.filter(h => h.keyword !== keyword);
-    filtered.unshift(entry);
-    records = filtered.slice(0, MAX_HISTORY);
-    save();
-    renderHistory();
-  }
-
-  function editListPrice(idx) {
-    if (reorderMode) return;
-    if (selectMode) { toggleSelectItem(idx); return; }
-    const h = records[idx];
-    if (!h) return;
-    const current = h.listPrice != null ? String(h.listPrice) : '';
-    const input = prompt(`「${h.keyword}」の定価を入力してください（空欄で削除）`, current);
-    if (input === null) return;
-    const trimmed = input.trim();
-    const newVal = trimmed === '' ? null : parseListPriceInput(trimmed);
-    if (trimmed !== '' && newVal == null) return;
-    records[idx] = { ...h, listPrice: newVal };
-    save();
-    renderHistory();
-  }
-
-  // ── 選択モード ──
-  function toggleSelectMode() {
-    selectMode = !selectMode;
-    selectedIdxs.clear();
-    const btn = document.getElementById('btn-select');
-    btn.textContent = selectMode ? 'キャンセル' : '選択';
-    btn.classList.toggle('active', selectMode);
-    document.getElementById('btn-delete-selected').style.display = 'none';
-    renderHistory();
-  }
-
-  function toggleSelectItem(fullIdx) {
-    if (selectedIdxs.has(fullIdx)) selectedIdxs.delete(fullIdx);
-    else selectedIdxs.add(fullIdx);
-    renderHistory();
-  }
-
-  function deleteSelected() {
-    if (!selectedIdxs.size) return;
-    if (!confirm(`${selectedIdxs.size}件の履歴を削除しますか？`)) return;
-    records = records.filter((_, i) => !selectedIdxs.has(i));
-    save();
-    selectedIdxs.clear();
-    selectMode = false;
-    document.getElementById('btn-select').textContent = '選択';
-    document.getElementById('btn-select').classList.remove('active');
-    document.getElementById('btn-delete-selected').style.display = 'none';
-    renderHistory();
-  }
-
-  // ── 描画 ──
-  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function fmtPrice(val) { return val !== null ? '¥' + Number(val).toLocaleString('ja-JP') : null; }
-
-  function renderHistory() {
-    const list = document.getElementById('records-list');
-    list.classList.toggle('select-mode', selectMode);
-    list.classList.toggle('reorder-mode', reorderMode);
-
-    const delBtn = document.getElementById('btn-delete-selected');
-    const showDel = selectMode && selectedIdxs.size > 0;
-    delBtn.style.display = showDel ? 'inline-block' : 'none';
-    if (showDel) delBtn.textContent = `削除（${selectedIdxs.size}件）`;
-
-    if (!records.length) {
-      list.innerHTML = '<div class="records-empty">履歴がありません</div>';
+    if (!shippingVal) {
+      document.getElementById('inp-size').focus();
       return;
     }
 
-    const makeBody = (h, idx) => {
-      const cp = fmtPrice(h.cheapest);
-      const lp = fmtPrice(h.listPrice);
-      const diff = computeDiff(h.cheapest, h.listPrice);
-      const diffStr = fmtDiff(diff);
-      return `
-        <div class="records-item-body">
-          <div class="records-keyword">${esc(h.keyword)}</div>
-          <div class="records-prices">
-            <div class="records-price-item">
-              <span class="records-price-label">最安</span>
-              <span class="records-price-val${cp ? ' cheapest' : ' none'}">${cp ?? '-'}</span>
-            </div>
-            <div class="records-price-item">
-              <span class="records-price-label">定価</span>
-              <span class="records-price-val editable${lp ? '' : ' none'}" onclick="event.stopPropagation(); editListPrice(${idx})">${lp ?? '-'}</span>
-            </div>
-            ${diffStr ? `
-            <div class="records-price-item">
-              <span class="records-price-label">${diff.fee > 0 ? '実益' : '差益'}</span>
-              <span class="records-price-val ${diff.net > 0 ? 'diff-pos' : 'diff-neg'}">${diffStr}</span>
-            </div>` : ''}
-          </div>
-          <div class="records-datetime">${h.datetime}</div>
-        </div>`;
-    };
+    const shipping   = parseInt(shippingVal);
+    const yahooFee   = Math.round(price * YAHOO_FEE_RATE);
+    const agencyFee  = Math.round(price * AGENCY_FEE_RATE);
+    const net        = price - yahooFee - shipping - agencyFee;
+    const inputNet   = parsePrice(document.getElementById('inp-net').value);
+    const cost       = parsePrice(document.getElementById('inp-cost').value);
 
-    if (reorderMode) {
-      list.innerHTML = records.map((h, fi) => `
-        <div class="records-item" data-filter-idx="${fi}" onclick="onItemClick(${fi})">
-          ${makeBody(h, fi)}
-          <div style="display:flex;align-items:center;flex-shrink:0">
-            <span class="drag-handle" data-filter-idx="${fi}">☰</span>
-          </div>
-        </div>`).join('');
-      list.querySelectorAll('.drag-handle').forEach(handle => {
-        handle.addEventListener('touchstart', e => {
-          e.preventDefault();
-          startDrag(e, Number(handle.dataset.filterIdx));
-        }, { passive: false });
-      });
-      return;
+    document.getElementById('res-price').textContent      = fmt(price);
+    document.getElementById('res-yahoo-fee').textContent  = '-' + fmt(yahooFee);
+    document.getElementById('res-shipping').textContent   = '-' + fmt(shipping);
+    document.getElementById('res-agency-fee').textContent = '-' + fmt(agencyFee);
+
+    const displayNet = inputNet ?? net;
+    const elNet = document.getElementById('res-net');
+    elNet.textContent = (displayNet >= 0 ? '+' : '-') + fmt(displayNet);
+    elNet.className   = 'result-value ' + (displayNet >= 0 ? 'net-pos' : 'net-neg');
+
+    const rowProfit = document.getElementById('res-row-profit');
+    if (cost != null) {
+      const profit = displayNet - cost;
+      const elProfit = document.getElementById('res-profit');
+      elProfit.textContent = (profit >= 0 ? '+' : '-') + fmt(profit);
+      elProfit.className   = 'result-value ' + (profit >= 0 ? 'net-pos' : 'net-neg');
+      rowProfit.style.display = '';
+    } else {
+      rowProfit.style.display = 'none';
     }
 
-    list.innerHTML = records.map((h, i) => `
-      <div class="records-item${selectedIdxs.has(i) ? ' selected' : ''}" onclick="onItemClick(${i})">
-        <div class="records-check"><input type="checkbox" ${selectedIdxs.has(i) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectItem(${i})"></div>
-        ${makeBody(h, i)}
-        <div style="display:flex;align-items:center;flex-shrink:0;gap:6px">
-          <span class="records-arrow">›</span>
-        </div>
-      </div>`).join('');
+    document.getElementById('res-your-profit').textContent = fmt(agencyFee) + 'です。';
+
+    document.getElementById('result-card').style.display = '';
   }
 
-  function onItemClick(idx) {
-    if (reorderMode) return;
-    if (selectMode) { toggleSelectItem(idx); return; }
-    loadFromHistory(idx);
-  }
-
-  function loadFromHistory(idx) {
-    const h = records[idx];
-    if (!h) return;
-    window.open(`https://store.shopping.yahoo.co.jp/${SHOPPING_STORE_ID}/search.html?p=${encodeURIComponent(h.keyword)}&X=12`, '_blank');
-  }
-
-  // ── 並び替えモード ──
-  function enterReorderMode() {
-    if (selectMode) toggleSelectMode();
-    reorderMode = true;
-    document.getElementById('btn-select').style.display = 'none';
-    document.getElementById('btn-done-reorder').style.display = '';
-    renderHistory();
-    if (navigator.vibrate) navigator.vibrate(40);
-  }
-
-  function exitReorderMode() {
-    reorderMode = false;
-    document.getElementById('btn-select').style.display = '';
-    document.getElementById('btn-done-reorder').style.display = 'none';
-    renderHistory();
-  }
-
-  function startDrag(e, filterIdx) {
-    const cardEl = document.querySelector(`.records-item[data-filter-idx="${filterIdx}"]`);
-    if (!cardEl) return;
-    const rect  = cardEl.getBoundingClientRect();
-    const touch = e.touches[0];
-    const ghost = cardEl.cloneNode(true);
-    ghost.className = 'records-item drag-ghost';
-    ghost.style.left  = `${rect.left}px`;
-    ghost.style.top   = `${rect.top}px`;
-    ghost.style.width = `${rect.width}px`;
-    document.body.appendChild(ghost);
-    cardEl.classList.add('dragging');
-    dragState = { filterIdx, cardEl, ghost, offsetY: touch.clientY - rect.top, startY: touch.clientY, moved: false, targetIdx: null };
-  }
-
-  function moveDrag(e) {
-    if (!dragState) return;
-    const touch = e.touches[0];
-    if (Math.abs(touch.clientY - dragState.startY) > 8) dragState.moved = true;
-    dragState.ghost.style.top = `${Math.max(60, touch.clientY - dragState.offsetY)}px`;
-    if (!dragState.moved) return;
-    const allCards = [...document.querySelectorAll('.records-item:not(.drag-ghost)')];
-    const srcIdx = dragState.filterIdx;
-    let targetIdx = allCards.length;
-    for (let i = 0; i < allCards.length; i++) {
-      if (i === srcIdx) continue;
-      const rb = allCards[i].getBoundingClientRect();
-      const matrix = new DOMMatrix(getComputedStyle(allCards[i]).transform);
-      if (touch.clientY < rb.top - matrix.m42 + rb.height / 2) { targetIdx = i; break; }
-    }
-    dragState.targetIdx = targetIdx;
-    const shiftPx = (allCards[srcIdx]?.getBoundingClientRect().height ?? 0) + 8;
-    allCards.forEach((c, i) => {
-      if (i === srcIdx) return;
-      c.style.transform = targetIdx <= srcIdx
-        ? ((i >= targetIdx && i < srcIdx) ? `translateY(${shiftPx}px)` : '')
-        : ((i > srcIdx && i <= targetIdx - 1) ? `translateY(-${shiftPx}px)` : '');
-    });
-  }
-
-  function endDrag() {
-    if (!dragState) return;
-    const { ghost, cardEl, filterIdx, targetIdx, moved } = dragState;
-    ghost.remove();
-    cardEl.classList.remove('dragging');
-    document.querySelectorAll('.records-item:not(.drag-ghost)').forEach(c => c.style.transform = '');
-    dragState = null;
-    if (!moved) { exitReorderMode(); return; }
-    if (targetIdx === null || targetIdx === filterIdx) { renderHistory(); return; }
-    const newRecords = [...records];
-    const [item] = newRecords.splice(filterIdx, 1);
-    newRecords.splice(targetIdx > filterIdx ? targetIdx - 1 : targetIdx, 0, item);
-    records = newRecords;
-    save();
-    renderHistory();
-  }
-
-  // ── イベント ──
-  const listEl = document.getElementById('records-list');
-  listEl.addEventListener('touchstart', e => {
-    if (reorderMode || selectMode) return;
-    const card = e.target.closest('.records-item');
-    if (!card || e.target.closest('button') || e.target.closest('input')) return;
-    longPressStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    longPressTimer = setTimeout(() => { longPressTimer = null; enterReorderMode(); }, 600);
-  }, { passive: true });
-  listEl.addEventListener('touchmove', e => {
-    if (!longPressTimer) return;
-    if (Math.abs(e.touches[0].clientX - longPressStart.x) > 10 || Math.abs(e.touches[0].clientY - longPressStart.y) > 10) {
-      clearTimeout(longPressTimer); longPressTimer = null;
-    }
-  }, { passive: true });
-  listEl.addEventListener('touchend', () => { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } }, { passive: true });
-  document.addEventListener('touchmove', e => { if (dragState) { e.preventDefault(); moveDrag(e); } }, { passive: false });
-  document.addEventListener('touchend', () => { if (dragState) endDrag(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Enter' && activeTab === 'search') doSearch(); });
-
-  // ── Firebase 読み込み ──
-  docRef.onSnapshot(snap => {
-    if (dragState) return;
-    records = snap.exists ? (snap.data().list || []) : [];
-    renderHistory();
-  });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') doCalc(); });
 </script>
 
 </body>
