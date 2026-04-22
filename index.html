@@ -299,6 +299,10 @@
         <span class="result-label">送料</span>
         <span class="result-value deduct" id="res-shipping">-</span>
       </div>
+      <div class="result-row" style="background:#0d1420">
+        <span class="result-label">小計</span>
+        <span class="result-value price" id="res-subtotal">-</span>
+      </div>
       <div class="result-row">
         <span class="result-label">代行手数料 (10%)</span>
         <span class="result-value deduct" id="res-agency-fee">-</span>
@@ -308,12 +312,8 @@
         <span class="result-value" id="res-net">-</span>
       </div>
       <div class="result-row" id="res-row-profit" style="display:none">
-        <span class="result-label">損益（手取り − 買値）</span>
+        <span class="result-label">あなたの利益</span>
         <span class="result-value" id="res-profit">-</span>
-      </div>
-      <div class="result-row your-profit-row">
-        <span class="result-label your-profit-label">あなたの利益は・・・・</span>
-        <span class="result-value your-profit-val" id="res-your-profit">-</span>
       </div>
     </div>
   </div>
@@ -353,13 +353,15 @@
 
     const shipping   = parseInt(shippingVal);
     const yahooFee   = Math.round(price * YAHOO_FEE_RATE);
-    const agencyFee  = Math.round(price * AGENCY_FEE_RATE);
-    const net        = price - yahooFee - shipping - agencyFee;
+    const subtotal   = price - yahooFee - shipping;
+    const agencyFee  = Math.round(subtotal * AGENCY_FEE_RATE);
+    const net        = subtotal - agencyFee;
     const cost = parsePrice(document.getElementById('inp-cost').value);
 
     document.getElementById('res-price').textContent      = fmt(price);
     document.getElementById('res-yahoo-fee').textContent  = '-' + fmt(yahooFee);
     document.getElementById('res-shipping').textContent   = '-' + fmt(shipping);
+    document.getElementById('res-subtotal').textContent   = fmt(subtotal);
     document.getElementById('res-agency-fee').textContent = '-' + fmt(agencyFee);
 
     const elNet = document.getElementById('res-net');
