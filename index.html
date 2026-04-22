@@ -221,7 +221,7 @@
 <body>
 
   <h1>空売り計算表</h1>
-  <p class="subtitle">最安出品価格を取得します</p>
+
 
   <div class="card">
     <span class="form-title">新規試算</span>
@@ -272,15 +272,6 @@
         <span class="fixed-badge">固定</span>
       </span>
       <span class="fixed-val">10%</span>
-    </div>
-
-    <!-- 代行依頼主の手取り -->
-    <div class="field">
-      <label>代行依頼主の手取り</label>
-      <div class="input-with-prefix">
-        <span class="input-prefix">¥</span>
-        <input type="text" id="inp-net" placeholder="0" inputmode="numeric" autocomplete="off" oninput="onInputChange()">
-      </div>
     </div>
 
     <!-- 代行依頼主の買値 -->
@@ -364,22 +355,20 @@
     const yahooFee   = Math.round(price * YAHOO_FEE_RATE);
     const agencyFee  = Math.round(price * AGENCY_FEE_RATE);
     const net        = price - yahooFee - shipping - agencyFee;
-    const inputNet   = parsePrice(document.getElementById('inp-net').value);
-    const cost       = parsePrice(document.getElementById('inp-cost').value);
+    const cost = parsePrice(document.getElementById('inp-cost').value);
 
     document.getElementById('res-price').textContent      = fmt(price);
     document.getElementById('res-yahoo-fee').textContent  = '-' + fmt(yahooFee);
     document.getElementById('res-shipping').textContent   = '-' + fmt(shipping);
     document.getElementById('res-agency-fee').textContent = '-' + fmt(agencyFee);
 
-    const displayNet = inputNet ?? net;
     const elNet = document.getElementById('res-net');
-    elNet.textContent = (displayNet >= 0 ? '+' : '-') + fmt(displayNet);
-    elNet.className   = 'result-value ' + (displayNet >= 0 ? 'net-pos' : 'net-neg');
+    elNet.textContent = (net >= 0 ? '+' : '-') + fmt(net);
+    elNet.className   = 'result-value ' + (net >= 0 ? 'net-pos' : 'net-neg');
 
     const rowProfit = document.getElementById('res-row-profit');
     if (cost != null) {
-      const profit = displayNet - cost;
+      const profit = net - cost;
       const elProfit = document.getElementById('res-profit');
       elProfit.textContent = (profit >= 0 ? '+' : '-') + fmt(profit);
       elProfit.className   = 'result-value ' + (profit >= 0 ? 'net-pos' : 'net-neg');
