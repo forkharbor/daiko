@@ -155,6 +155,22 @@
     .field select:focus { border-color: #2563eb; }
     .field select option { background: #111827; }
 
+    /* ── Yahoo遷移ボタン ── */
+    .btn-yahoo {
+      background: #ff0033;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .btn-yahoo:hover { background: #cc0029; }
+
     /* ── 試算ボタン ── */
     .btn-calc {
       width: 100%;
@@ -285,6 +301,18 @@
     <div class="field">
       <label>商品名</label>
       <input type="text" id="inp-keyword" placeholder="例：ポケモンカード 151 box" autocomplete="off">
+    </div>
+
+    <!-- 下限価格 + Yahoo遷移 -->
+    <div class="field">
+      <label>下限価格（円以上）</label>
+      <div style="display:flex;gap:10px;align-items:stretch">
+        <div class="input-with-prefix" style="flex:1">
+          <span class="input-prefix">¥</span>
+          <input type="text" id="inp-minprice" placeholder="0" inputmode="numeric" autocomplete="off">
+        </div>
+        <button class="btn-yahoo" onclick="openYahoo()">Yahoo!で確認 →</button>
+      </div>
     </div>
 
     <!-- Yahoo!ショッピング販売価格 -->
@@ -520,6 +548,15 @@
     records = snap.exists ? (snap.data().list || []) : [];
     renderHistory();
   });
+
+  function openYahoo() {
+    const keyword = document.getElementById('inp-keyword').value.trim();
+    if (!keyword) { document.getElementById('inp-keyword').focus(); return; }
+    const minPrice = parsePrice(document.getElementById('inp-minprice').value);
+    const params = new URLSearchParams({ p: keyword, sort: 'price' });
+    if (minPrice) params.set('min_price', minPrice);
+    window.open('https://shopping.yahoo.co.jp/search?' + params.toString(), '_blank');
+  }
 
   document.addEventListener('keydown', e => { if (e.key === 'Enter') doCalc(); });
 </script>
