@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" href="logo.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>空売り計算表</title>
+  <title>販売代行計算表</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,20 +17,14 @@
       flex-direction: column;
       align-items: center;
       padding: 48px 16px 64px;
+      gap: 24px;
     }
 
     h1 {
       font-size: 1.3rem;
       color: #e0e6f0;
       font-weight: bold;
-      margin-bottom: 8px;
       letter-spacing: 0.04em;
-    }
-
-    .subtitle {
-      font-size: 0.78rem;
-      color: #4a5568;
-      margin-bottom: 36px;
     }
 
     .card {
@@ -209,19 +203,80 @@
     .result-value.deduct  { color: #8b95a5; }
     .result-value.net-pos { color: #4ade80; font-size: 1.2rem; }
     .result-value.net-neg { color: #f87171; font-size: 1.2rem; }
-    .result-row.net-row        { background: #0d1420; }
-    .result-row.your-profit-row {
-      background: #0f1f10;
-      border-top: 2px solid #166534;
+    .result-row.subtotal-row { background: #0d1420; }
+    .result-row.net-row      { background: #0d1420; }
+
+    /* ── 履歴 ── */
+    .history-section {
+      width: 100%;
+      max-width: 480px;
     }
-    .your-profit-label { color: #4ade80 !important; }
-    .your-profit-val   { color: #4ade80; font-size: 1.4rem; }
+    .history-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .history-header h2 {
+      font-size: 0.78rem;
+      color: #4a90d9;
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex: 1;
+    }
+    .btn-clear-history {
+      font-size: 0.68rem;
+      color: #4a5568;
+      background: none;
+      border: 1px solid #2a3a50;
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-clear-history:hover { color: #e53e3e; border-color: #e53e3e; }
+
+    .history-empty {
+      text-align: center;
+      color: #3a4a60;
+      font-size: 0.88rem;
+      padding: 24px 0;
+    }
+
+    .history-item {
+      background: #111827;
+      border: 1px solid #1e2a3a;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+    .history-keyword {
+      font-size: 0.95rem;
+      color: #dde6f0;
+      font-weight: bold;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-prices {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+    .history-price-item { display: flex; align-items: center; gap: 5px; }
+    .history-price-label { font-size: 0.65rem; color: #4a5568; white-space: nowrap; }
+    .history-price-val   { font-size: 0.8rem; font-weight: bold; color: #e0e6f0; }
+    .history-price-val.pos { color: #4ade80; }
+    .history-price-val.neg { color: #f87171; }
+    .history-datetime { font-size: 0.7rem; color: #4a5568; }
   </style>
 </head>
 <body>
 
-  <h1>空売り計算表</h1>
-
+  <h1>販売代行計算表</h1>
 
   <div class="card">
     <span class="form-title">新規試算</span>
@@ -299,7 +354,7 @@
         <span class="result-label">送料</span>
         <span class="result-value deduct" id="res-shipping">-</span>
       </div>
-      <div class="result-row" style="background:#0d1420">
+      <div class="result-row subtotal-row">
         <span class="result-label">小計</span>
         <span class="result-value price" id="res-subtotal">-</span>
       </div>
@@ -318,9 +373,33 @@
     </div>
   </div>
 
+  <!-- 履歴 -->
+  <div class="history-section">
+    <div class="history-header">
+      <h2>試算履歴</h2>
+      <button class="btn-clear-history" onclick="clearHistory()">全削除</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
+  firebase.initializeApp({
+    apiKey: "AIzaSyCfvqQWLB8NJqmaH0k2G0wPcbJJjz2Vu4A",
+    authDomain: "kaimemo-58bad.firebaseapp.com",
+    projectId: "kaimemo-58bad",
+    storageBucket: "kaimemo-58bad.firebasestorage.app",
+    messagingSenderId: "308069117698",
+    appId: "1:308069117698:web:c61a57853abb7e8ffb1c1b"
+  });
+  const db = firebase.firestore();
+  const docRef = db.collection('data').doc('raccoo-price');
+
   const YAHOO_FEE_RATE  = 0.06;
   const AGENCY_FEE_RATE = 0.10;
+  const MAX_HISTORY = 100;
+  let records = [];
 
   function parsePrice(raw) {
     const digits = String(raw).replace(/[^\d]/g, '');
@@ -333,8 +412,12 @@
     return '¥' + Math.abs(n).toLocaleString('ja-JP');
   }
 
+  function formatDatetime(d) {
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
   function onInputChange() {
-    // 入力変更時に結果をクリア
     document.getElementById('result-card').style.display = 'none';
   }
 
@@ -342,21 +425,15 @@
     const price = parsePrice(document.getElementById('inp-price').value);
     const shippingVal = document.getElementById('inp-size').value;
 
-    if (!price) {
-      document.getElementById('inp-price').focus();
-      return;
-    }
-    if (!shippingVal) {
-      document.getElementById('inp-size').focus();
-      return;
-    }
+    if (!price) { document.getElementById('inp-price').focus(); return; }
+    if (!shippingVal) { document.getElementById('inp-size').focus(); return; }
 
-    const shipping   = parseInt(shippingVal);
-    const yahooFee   = Math.round(price * YAHOO_FEE_RATE);
-    const subtotal   = price - yahooFee - shipping;
-    const agencyFee  = Math.round(subtotal * AGENCY_FEE_RATE);
-    const net        = subtotal - agencyFee;
-    const cost = parsePrice(document.getElementById('inp-cost').value);
+    const shipping  = parseInt(shippingVal);
+    const yahooFee  = Math.round(price * YAHOO_FEE_RATE);
+    const subtotal  = price - yahooFee - shipping;
+    const agencyFee = Math.round(subtotal * AGENCY_FEE_RATE);
+    const net       = subtotal - agencyFee;
+    const cost      = parsePrice(document.getElementById('inp-cost').value);
 
     document.getElementById('res-price').textContent      = fmt(price);
     document.getElementById('res-yahoo-fee').textContent  = '-' + fmt(yahooFee);
@@ -379,10 +456,70 @@
       rowProfit.style.display = 'none';
     }
 
-    document.getElementById('res-your-profit').textContent = fmt(agencyFee) + 'です。';
-
     document.getElementById('result-card').style.display = '';
+
+    // Firebase に保存
+    const keyword = document.getElementById('inp-keyword').value.trim();
+    const sizeName = document.getElementById('inp-size').options[document.getElementById('inp-size').selectedIndex].text;
+    const entry = {
+      keyword: keyword || '（商品名なし）',
+      price, shipping, shippingLabel: sizeName, yahooFee, subtotal, agencyFee, net,
+      cost: cost ?? null,
+      profit: cost != null ? net - cost : null,
+      datetime: formatDatetime(new Date())
+    };
+    const filtered = records.filter(r => !(r.keyword === entry.keyword && r.price === entry.price));
+    filtered.unshift(entry);
+    records = filtered.slice(0, MAX_HISTORY);
+    docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
   }
+
+  function clearHistory() {
+    if (!records.length) return;
+    if (!confirm('試算履歴を全件削除しますか？')) return;
+    records = [];
+    docRef.set({ list: [] }).catch(err => console.error('保存エラー:', err.message));
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    if (!records.length) {
+      list.innerHTML = '<div class="history-empty">履歴がありません</div>';
+      return;
+    }
+    list.innerHTML = records.map(r => {
+      const profitHtml = r.profit != null ? `
+        <div class="history-price-item">
+          <span class="history-price-label">利益</span>
+          <span class="history-price-val ${r.profit >= 0 ? 'pos' : 'neg'}">${(r.profit >= 0 ? '+' : '-') + fmt(r.profit)}</span>
+        </div>` : '';
+      return `
+        <div class="history-item">
+          <div class="history-keyword">${esc(r.keyword)}</div>
+          <div class="history-prices">
+            <div class="history-price-item">
+              <span class="history-price-label">販売価格</span>
+              <span class="history-price-val">${fmt(r.price)}</span>
+            </div>
+            <div class="history-price-item">
+              <span class="history-price-label">手取り</span>
+              <span class="history-price-val ${r.net >= 0 ? 'pos' : 'neg'}">${(r.net >= 0 ? '+' : '-') + fmt(r.net)}</span>
+            </div>
+            ${profitHtml}
+          </div>
+          <div class="history-datetime">${r.datetime} ／ ${esc(r.shippingLabel)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  docRef.onSnapshot(snap => {
+    records = snap.exists ? (snap.data().list || []) : [];
+    renderHistory();
+  });
 
   document.addEventListener('keydown', e => { if (e.key === 'Enter') doCalc(); });
 </script>
