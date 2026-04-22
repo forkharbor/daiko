@@ -553,9 +553,11 @@
     const keyword = document.getElementById('inp-keyword').value.trim();
     if (!keyword) { document.getElementById('inp-keyword').focus(); return; }
     const minPrice = parsePrice(document.getElementById('inp-minprice').value);
-    const params = new URLSearchParams({ p: keyword, aq: '-1', sort: 'price' });
-    if (minPrice) params.set('min_price', minPrice);
-    window.open('https://shopping.yahoo.co.jp/search?' + params.toString(), '_blank');
+    const encodedKeyword = keyword.trim().replace(/\s+/g, '+');
+    const params = new URLSearchParams({ X: '12', tab_ex: 'commerce' });
+    if (minPrice) params.set('pf', minPrice);
+    // /1/ = 価格＋送料安い順
+    window.open(`https://shopping.yahoo.co.jp/search/${encodedKeyword}/1/?${params.toString()}`, '_blank');
   }
 
   document.addEventListener('keydown', e => { if (e.key === 'Enter') doCalc(); });
