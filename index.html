@@ -241,17 +241,19 @@
       text-transform: uppercase;
       flex: 1;
     }
-    .btn-clear-history {
+    .btn-history-action {
       font-size: 0.68rem;
-      color: #4a5568;
+      color: #8899aa;
       background: none;
       border: 1px solid #2a3a50;
       border-radius: 6px;
       padding: 4px 10px;
       cursor: pointer;
+      white-space: nowrap;
       font-family: inherit;
     }
-    .btn-clear-history:hover { color: #e53e3e; border-color: #e53e3e; }
+    .btn-history-action.selecting { color: #fbbf24; border-color: #92400e; background: #1c1408; }
+    .btn-delete-selected:hover { color: #e53e3e; border-color: #e53e3e; }
 
     .history-empty {
       text-align: center;
@@ -266,7 +268,16 @@
       border-radius: 10px;
       padding: 12px 14px;
       margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.15s, background 0.15s;
     }
+    .history-item.selected { border-color: #2563eb; background: #0f1e3a; }
+    .history-check { display: none; flex-shrink: 0; }
+    .select-mode .history-check { display: block; }
+    .history-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: #2563eb; cursor: pointer; }
+    .history-body { flex: 1; min-width: 0; }
     .history-keyword {
       font-size: 0.95rem;
       color: #dde6f0;
@@ -404,8 +415,9 @@
   <!-- 履歴 -->
   <div class="history-section">
     <div class="history-header">
-      <h2>試算履歴</h2>
-      <button class="btn-clear-history" onclick="clearHistory()">全削除</button>
+      <h2>履歴</h2>
+      <button class="btn-history-action" id="btn-select" onclick="toggleSelectMode()">選択</button>
+      <button class="btn-history-action btn-delete-selected" id="btn-delete" onclick="deleteSelected()" style="display:none">削除</button>
     </div>
     <div id="history-list"></div>
   </div>
@@ -428,6 +440,8 @@
   const AGENCY_FEE_RATE = 0.10;
   const MAX_HISTORY = 100;
   let records = [];
+  let selectMode = false;
+  let selectedIdxs = new Set();
 
   function parsePrice(raw) {
     const digits = String(raw).replace(/[^\d]/g, '');
@@ -502,40 +516,73 @@
     docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
   }
 
-  function clearHistory() {
-    if (!records.length) return;
-    if (!confirm('試算履歴を全件削除しますか？')) return;
-    records = [];
-    docRef.set({ list: [] }).catch(err => console.error('保存エラー:', err.message));
+  function toggleSelectMode() {
+    selectMode = !selectMode;
+    selectedIdxs.clear();
+    const btn = document.getElementById('btn-select');
+    btn.textContent = selectMode ? 'キャンセル' : '選択';
+    btn.classList.toggle('selecting', selectMode);
+    document.getElementById('btn-delete').style.display = 'none';
+    renderHistory();
+  }
+
+  function toggleSelectItem(idx) {
+    if (selectedIdxs.has(idx)) selectedIdxs.delete(idx);
+    else selectedIdxs.add(idx);
+    const delBtn = document.getElementById('btn-delete');
+    if (selectedIdxs.size > 0) {
+      delBtn.style.display = '';
+      delBtn.textContent = `削除（${selectedIdxs.size}件）`;
+    } else {
+      delBtn.style.display = 'none';
+    }
+    renderHistory();
+  }
+
+  function deleteSelected() {
+    if (!selectedIdxs.size) return;
+    if (!confirm(`${selectedIdxs.size}件の履歴を削除しますか？`)) return;
+    records = records.filter((_, i) => !selectedIdxs.has(i));
+    selectedIdxs.clear();
+    selectMode = false;
+    document.getElementById('btn-select').textContent = '選択';
+    document.getElementById('btn-select').classList.remove('selecting');
+    document.getElementById('btn-delete').style.display = 'none';
+    docRef.set({ list: records }).catch(err => console.error('保存エラー:', err.message));
+    renderHistory();
   }
 
   function renderHistory() {
     const list = document.getElementById('history-list');
+    list.classList.toggle('select-mode', selectMode);
     if (!records.length) {
       list.innerHTML = '<div class="history-empty">履歴がありません</div>';
       return;
     }
-    list.innerHTML = records.map(r => {
+    list.innerHTML = records.map((r, i) => {
       const profitHtml = r.profit != null ? `
         <div class="history-price-item">
           <span class="history-price-label">利益</span>
           <span class="history-price-val ${r.profit >= 0 ? 'pos' : 'neg'}">${(r.profit >= 0 ? '+' : '-') + fmt(r.profit)}</span>
         </div>` : '';
       return `
-        <div class="history-item">
-          <div class="history-keyword">${esc(r.keyword)}</div>
-          <div class="history-prices">
-            <div class="history-price-item">
-              <span class="history-price-label">販売価格</span>
-              <span class="history-price-val">${fmt(r.price)}</span>
+        <div class="history-item${selectedIdxs.has(i) ? ' selected' : ''}" onclick="selectMode && toggleSelectItem(${i})">
+          <div class="history-check"><input type="checkbox" ${selectedIdxs.has(i) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectItem(${i})"></div>
+          <div class="history-body">
+            <div class="history-keyword">${esc(r.keyword)}</div>
+            <div class="history-prices">
+              <div class="history-price-item">
+                <span class="history-price-label">販売価格</span>
+                <span class="history-price-val">${fmt(r.price)}</span>
+              </div>
+              <div class="history-price-item">
+                <span class="history-price-label">手取り</span>
+                <span class="history-price-val ${r.net >= 0 ? 'pos' : 'neg'}">${(r.net >= 0 ? '+' : '-') + fmt(r.net)}</span>
+              </div>
+              ${profitHtml}
             </div>
-            <div class="history-price-item">
-              <span class="history-price-label">手取り</span>
-              <span class="history-price-val ${r.net >= 0 ? 'pos' : 'neg'}">${(r.net >= 0 ? '+' : '-') + fmt(r.net)}</span>
-            </div>
-            ${profitHtml}
+            <div class="history-datetime">${r.datetime} ／ ${esc(r.shippingLabel)}</div>
           </div>
-          <div class="history-datetime">${r.datetime} ／ ${esc(r.shippingLabel)}</div>
         </div>`;
     }).join('');
   }
