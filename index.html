@@ -774,14 +774,14 @@
     document.getElementById('res-agency-fee').textContent = '-' + fmt(agencyFee);
 
     const elNet = document.getElementById('res-net');
-    elNet.textContent = (net >= 0 ? '+' : '-') + fmt(net);
+    elNet.textContent = (net < 0 ? '-' : '') + fmt(net);
     elNet.className   = 'result-value ' + (net >= 0 ? 'net-pos' : 'net-neg');
 
     const rowProfit = document.getElementById('res-row-profit');
     if (cost != null) {
       const profit = net - cost;
       const elProfit = document.getElementById('res-profit');
-      elProfit.textContent = (profit >= 0 ? '+' : '-') + fmt(profit);
+      elProfit.textContent = (profit < 0 ? '-' : '') + fmt(profit);
       elProfit.className   = 'result-value ' + (profit >= 0 ? 'net-pos' : 'net-neg');
       rowProfit.style.display = '';
     } else {
@@ -891,7 +891,7 @@
       const profitHtml = r.profit != null ? `
         <div class="history-price-item">
           <span class="history-price-label">利益</span>
-          <span class="history-price-val ${r.profit >= 0 ? 'pos' : 'neg'}">${(r.profit >= 0 ? '+' : '-') + fmt(r.profit)}</span>
+          <span class="history-price-val ${r.profit >= 0 ? 'pos' : 'neg'}">${(r.profit < 0 ? '-' : '') + fmt(r.profit)}</span>
         </div>` : '';
       return `
         <div class="history-item${selectedIdxs.has(i) ? ' selected' : ''}" data-idx="${i}" onclick="selectMode && toggleSelectItem(${i})">
@@ -906,7 +906,7 @@
               </div>
               <div class="history-price-item">
                 <span class="history-price-label">手取り</span>
-                <span class="history-price-val ${r.net >= 0 ? 'pos' : 'neg'}">${(r.net >= 0 ? '+' : '-') + fmt(r.net)}</span>
+                <span class="history-price-val ${r.net >= 0 ? 'pos' : 'neg'}">${(r.net < 0 ? '-' : '') + fmt(r.net)}</span>
               </div>
               ${profitHtml}
             </div>
