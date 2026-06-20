@@ -512,13 +512,13 @@
       </div>
     </div>
 
-    <!-- 代行手数料（固定10%） -->
+    <!-- 代行手数料（固定8%） -->
     <div class="fixed-row">
       <span class="fixed-row-label">
         代行手数料
         <span class="fixed-badge">固定</span>
       </span>
-      <span class="fixed-val">10%</span>
+      <span class="fixed-val">8%</span>
     </div>
 
     <!-- 代行依頼主の買値 -->
@@ -567,7 +567,7 @@
         <p>前項に基づき当社がエンドユーザー対応を行ったことにより、依頼主の責に帰すべき事由に起因して当社に損害（返金対応費用、販売機会損失、プラットフォーム上の評価毀損に伴う損害等）が発生した場合、依頼主は当社に対し、当該実損害を賠償する義務を負います。ただし、不可抗力（天災、法令改正、メーカー都合による仕様変更・キャンセル等、依頼主の責に帰すべからざる事由）に起因する場合は、この限りではありません。</p>
         <p>当社は、前項に基づく損害賠償請求に代えて、または併せて、以降の取引を停止する措置（いわゆるブラックリスト登録）を講じることができるものとします。</p>
         <p>第6条（代行手数料）</p>
-        <p>代行手数料は、買取価格に対して10％（税別）とし、買取代金からの控除により精算します。具体的な料率は申込時に書面（電磁的方法を含む）で確認するものとします。</p>
+        <p>代行手数料は、買取価格に対して8％（税別）とし、買取代金からの控除により精算します。具体的な料率は申込時に書面（電磁的方法を含む）で確認するものとします。</p>
         <p>代行手数料には、以下の業務およびリスクに対する対価が含まれます。</p>
         <p>Yahoo!ショッピング等における商品ページの作成、カスタマイズおよび運用業務</p>
         <p>エンドユーザーからの入金までの期間（概ね1ヶ月）における資金拘束に伴う機会費用</p>
@@ -630,7 +630,7 @@
         <span class="result-value price" id="res-subtotal">-</span>
       </div>
       <div class="result-row">
-        <span class="result-label">代行手数料 (小計の10%)</span>
+        <span class="result-label">代行手数料 (小計の8%)</span>
         <span class="result-value deduct" id="res-agency-fee">-</span>
       </div>
       <div class="result-row net-row">
@@ -669,7 +669,7 @@
   const docRef = db.collection('data').doc('raccoo-price');
 
   const YAHOO_FEE_RATE  = 0.06;
-  const AGENCY_FEE_RATE = 0.10;
+  const AGENCY_FEE_RATE = 0.08;
   const MAX_HISTORY = 100;
 
   const SHIPPING_SIZES = [
